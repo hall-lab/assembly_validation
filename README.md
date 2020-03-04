@@ -1,7 +1,7 @@
-##Assembly evaluation pipeline
+## Assembly evaluation pipeline
 This pipeline evaluates assemblies by aligning them to a reference, calling variants, quantifying those variants, and, if applicable, comparing them to gold-standard variant lists.  The end result is a set of plots.
 
-###Inputs
+### Inputs
 * assembly_list - tab-delimited file with the fields <assembly name> <first fasta> <second fasta> <truth name>  If an assembly contains only one fasta, the second fasta can be set to an empty file.  If no truthset is available, <truth name> should be NONE.  Note that the <assembly name> should consist of the sample name followed by a period, followed by arbitrary other text.  Sample name should not contain a period.
 * populations - tab-delimited file connecting sample to population.  Fields are: <sample> <population code> <superpopulation code> <sex>
 * ref - reference fasta (not gzipped!)
@@ -13,10 +13,10 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * str_track - bed file denoting simple repeats
 * seg_dup_track - bed file denoting segmental duplications
 
-###Alignment and variant calling methodology
+### Alignment and variant calling methodology
 
 
-###Outputs
+### Outputs
 * happy.sensitivity.png - Gives sensitivity to the snp/indel truthset as determined by hap.py
 * het_fates.png - For each variant in the truthset, show whether it was called heterozygous, homozygous alt, or not called (homozygous ref) in the variant callset from the assembly.
 * <assembly name>.no_gaps_coverage_summary.png - Gives the percentage of chr1-22 non-gap reference bases at each coverage 0X-9X, as well as 10X+
