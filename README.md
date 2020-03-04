@@ -14,7 +14,16 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * seg_dup_track - bed file denoting segmental duplications
 
 ### Alignment and variant calling methodology
-
+1. Contigs from both fasta files (possibly representing two different haplotypes) are combined into a single fasta, with the suffixes `_H1` and `_H2` appended to contig names from the first and second fasta file, respectively.  If the second fasta file is empty, the first fasta file is simply taken as-is.
+2. Contigs are aligned to the given reference using `minimap2` with the `asm5` preset.
+3. `paftools call` is used to call variants from the `cs` tags in the minimap alignment.
+4. A custom perl script is used to "genotype" the variant calls:
+    * If site is covered by 1 contig, call a homozygous variant (1/1)
+    * If site is covered by 2+ contigs and the variant appears 2+ times, call a homozygous variant (1/1)
+    * If site is covered by 2+ contigs and different variants appear, call a heterozygous variant (1/2)
+    * If site is covered by 2+ contigs and only one variant appears, call heterozygous variant (0/1)
+5. Custom python scripts are used to call SVs based on split reads and classify them by type.
+6. Indels >= 40bp from step 3 are combined with SVs from step 5 to form a combined set of SVs.
 
 ### Outputs
 * happy.sensitivity.png - Gives sensitivity to the snp/indel truthset as determined by hap.py
