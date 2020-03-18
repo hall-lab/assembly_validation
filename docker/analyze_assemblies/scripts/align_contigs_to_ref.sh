@@ -35,7 +35,7 @@ GREP=/bin/grep
 
 CONTIGS=$OUTPUT_PREFIX.combined_contigs.fa
 if [ -s $CONTIG2 ]; then
-    cat <(cat $CONTIG1 | sed 's/\(>.*\)/\1_H1/') <(cat $CONTIG2 | sed 's/\(>.*\)/\1_H2/') > $CONTIGS
+    cat <(zcat $CONTIG1 | sed 's/\(>.*\)/\1_H1/') <(zcat $CONTIG2 | sed 's/\(>.*\)/\1_H2/') > $CONTIGS
 else
     cp $CONTIG1 $CONTIGS
 fi
