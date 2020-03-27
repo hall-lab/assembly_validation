@@ -140,7 +140,7 @@ ggplot(indels %>% filter(Metric == "truthHetToHomalt" | Metric == "truthHetToHet
     geom_bar(stat="identity", position="stack") +
     facet_grid(slop~Squashed, scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=45, hjust=1, size=5)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("Fates of heterozygous indels from truthset")
 ggsave("plots/truthHetIndelFates.png", width=8, height=6, units="in")
 
@@ -341,24 +341,8 @@ ggplot(svCounts %>% filter(Type=="nonRep") %>% filter(!str_detect(Metric, "^G"))
     facet_wrap("Metric", scales="free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
-    ggtitle("Non-repetitive SV counts by type")
-    ggsave("plots/nonrepSvCountsSquashed.png", width=12, height=8, units="in")
-
-ggplot(svCounts %>% filter(Type=="str") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Superpopulation)) +
-    geom_bar(stat="identity", position="dodge") +
-    facet_wrap("Metric", scales="free") +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
-    ggtitle("STR SV counts by type")
-ggsave("plots/strSvCountsPopulation.png", width=12, height=8, units="in")
-
-ggplot(svCounts %>% filter(Type=="str") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Squashed)) +
-    geom_bar(stat="identity", position="dodge") +
-    facet_wrap("Metric", scales="free") +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
-    ggtitle("STR SV counts by type")
-ggsave("plots/strSvCountsSquashed.png", width=12, height=8, units="in")
+    ggtitle("Non-rep SV counts by type")
+ggsave("plots/nonRepSvCountsSquashed.png", width=12, height=8, units="in")
 
 ggplot(svCounts %>% filter(Type=="segDup") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Superpopulation)) +
     geom_bar(stat="identity", position="dodge") +
