@@ -1,0 +1,1 @@
+GiaB_HG002	/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/HG002_SVs_Tier1_v0.6.GRCh38.sorted.vcf.gz
