@@ -108,7 +108,7 @@ task compare_indels {
     >>>
     runtime {
         memory: "16G"
-        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File counts="${output_prefix}.indels.indel.counts.horizontal.txt"
@@ -132,7 +132,7 @@ task compare_svs {
     >>>
     runtime {
         memory: "8G"
-        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File counts="${output_prefix}.sv.counts.horizontal.txt"
@@ -178,7 +178,7 @@ task calculate_het_fates {
     >>>
     runtime {
         memory: "4G"
-        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File het_counts="${output_prefix}.happy.het.counts.horizontal.txt"
@@ -197,7 +197,7 @@ task get_indel_lengths {
     >>>
     runtime {
         memory: "4G"
-        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File cigar_indel_lengths="${output_prefix}.indel_lengths.horizontal.txt"
@@ -221,7 +221,7 @@ task align_contigs {
     >>>
     runtime {
         memory: "64G"
-        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File genotyped_vcf="${output_prefix}.loose.genotyped.vcf.gz"
