@@ -193,7 +193,7 @@ task get_indel_lengths {
     command <<<
         set -exo pipefail
         touch tmp.2
-        /opt/hall-lab/python-2.7.15/bin/python /storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/assembly_validation/docker/analyze_assemblies/scripts/sv_lengths.py -v ~{vcf} -o ~{output_prefix}.indel_lengths.horizontal.txt
+        /opt/hall-lab/python-2.7.15/bin/python /opt/hall-lab/scripts/sv_lengths.py -v ~{vcf} -o ~{output_prefix}.indel_lengths.horizontal.txt
     >>>
     runtime {
         memory: "4G"
