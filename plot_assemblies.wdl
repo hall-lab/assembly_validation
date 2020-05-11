@@ -13,11 +13,13 @@ workflow PlotAssemblies {
         File truth_list_snp_indel
         File truth_list_confident_region
         File truth_list_sv_vcf
+        File truth_list_sv_confident_region
     }
     Array[Array[File]] assemblies = read_tsv(assembly_list)
     Map[String, File] truthsets_snp_indel = read_map(truth_list_snp_indel)
     Map[String, File] truthsets_confident_region = read_map(truth_list_confident_region)
     Map[String, File] truthsets_sv_vcf = read_map(truth_list_sv_vcf)
+    Map[String, File] truthsets_sv_confident_region = read_map(truth_list_sv_confident_region)
 
     scatter (assembly in assemblies) {
 	String truth_name = assembly[3]
@@ -30,6 +32,7 @@ workflow PlotAssemblies {
 		truth_vcf_snp_indel=if truth_name != "NONE" then truthsets_snp_indel[truth_name] else "None",
 		truth_confident_region=if truth_name != "NONE" then truthsets_confident_region[truth_name] else "None",
 		truth_vcf_sv=if truth_name != "NONE" then truthsets_sv_vcf[truth_name] else "None",
+        truth_confident_region_sv=if truth_name != "NONE" then truthsets_sv_confident_region[truth_name] else "None",
 		gap_file=gap_file,
 		str_track=str_track,
 		seg_dup_track=seg_dup_track,
