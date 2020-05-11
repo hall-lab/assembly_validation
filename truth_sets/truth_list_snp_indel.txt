@@ -1,1 +1,1 @@
-GiaB_HG002	/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/HG002_GRCh38_GIAB_highconf_CG-Illfb-IllsentieonHC-Ion-10XsentieonHC-SOLIDgatkHC_CHROM1-22_v.3.3.2_highconf_triophased.vcf.gz
+GiaB_HG002	/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/giab_4.1/HG002_GRCh38_1_22_v4.1_draft_benchmark.vcf.gz
