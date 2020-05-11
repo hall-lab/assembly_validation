@@ -127,7 +127,7 @@ task make_plots {
         echo "sv_counts_horizontal <- paste(dir, \"~{sv_fof}\", sep=\"/\")" >> notebook_inputs.txt
     >>>
     runtime {
-        docker: "apregier/plot_assemblies@sha256:862046f8c3cbe6519999e176d1d451c57117c9cfd3178f5fd8b51464fe44b281"
+        docker: "apregier/plot_assemblies@sha256:1551ac071577a9bf893fcdc4526710680876786183331338c85e6a1e43b5462d"
         memory: "4 GB"
     }
     output {
