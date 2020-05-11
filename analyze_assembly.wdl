@@ -128,7 +128,7 @@ task compare_svs {
     }
     command <<<
         set -exo pipefail
-        /bin/bash /opt/hall-lab/scripts/compareSVs.sh ~{truth} ~{bedpe} ~{output_prefix}.sv ~{sample_name} ~{truth_name} ~{seg_dup_bed} ~{str_bed}
+        /bin/bash /opt/hall-lab/scripts/compareSVs.sh ~{truth} ~{truth_confident_region} ~{bedpe} ~{output_prefix}.sv ~{sample_name} ~{truth_name} ~{seg_dup_bed} ~{str_bed}
     >>>
     runtime {
         memory: "8G"
