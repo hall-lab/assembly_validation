@@ -3,6 +3,7 @@ library(reshape2)
 library(plyr)
 library(ggplot2)
 library(dplyr)
+library(stringr)
 
 args <- commandArgs(trailingOnly = TRUE)
 populations <- read.table(file=args[1], header=FALSE, sep="\t", col.names=c("Sample", "Population", "Superpopulation", "Sex"))
@@ -20,6 +21,62 @@ segDup_types_files <- read.table(file=args[12], header=FALSE, col.names=c("file"
 het_fates_files <- read.table(file=args[13], header=FALSE, col.names=c("file"))
 str_venn_files <- read.table(file=args[14], header=FALSE, col.names=c("file"))
 segDup_venn_files <- read.table(file=args[15], header=FALSE, col.names=c("file"))
+cigar_indel_lengths_file <- read.table(file=args[16], header=FALSE, col.names=c("file"))
+assembly_file <- read.table(file=args[17], header=FALSE, col.names=c("Name", "Fasta1", "Fasta2", "Truth", "ID", "DataType"), sep="\t")
+assemblies <- assembly_file[,c("Name", "ID", "DataType")]
+assemblies$Squashed <- rep(FALSE, length(assemblies$Name))
+assemblies$Squashed[grepl("empty.fa", assembly_file$Fasta2)] <- TRUE
+
+cigar_indel_lengths <- data.frame()
+for (in_file in cigar_indel_lengths_file$file) {
+    assembly <- gsub(".indel_lengths.horizontal.txt", "", basename(in_file))
+    df <- read.table(file=in_file, header=TRUE, sep="\t")
+    df$Assembly <- assembly
+    cigar_indel_lengths <- rbind(cigar_indel_lengths, df)
+}
+cigar_indel_lengths$Metric = factor(cigar_indel_lengths$Metric, levels=c("1 bp", "2 bp", "3-10 bp", "11-100 bp", "101-1000 bp", "1-10 kb", "10 kb+"))
+head(assemblies)
+cigar_indel_lengths <- merge(cigar_indel_lengths, assemblies, by.x="Assembly", by.y="Name")
+ggplot(cigar_indel_lengths, aes(x=ID, y=Value, fill=Squashed)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_grid(Metric~Type, scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    ggtitle("Counts of indel variants detected in cigar string by size")
+ggsave("plots/indel_cigar_counts.png")
+
+counts <- data.frame()
+for (in_file in counts_files$file) {
+    assembly <- gsub(".counts.horizontal.txt", "", basename(in_file))
+    df <- read.table(file=in_file, header=FALSE, sep="\t", col.names=c("Metric", "Value"))
+    df$Assembly <- assembly
+    counts <- rbind(counts, df)
+}
+
+counts <- merge(counts, assemblies, by.x="Assembly", by.y="Name")
+ggplot(counts %>% filter(str_detect(Metric, "^Cigar")) %>% filter(!str_detect(Metric, "bp")), aes(x=ID, y=Value, fill=Squashed)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_grid(Metric~., scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    ggtitle("Counts of variants detected in cigar string")
+ggsave("plots/cigar_counts.png")
+
+ggplot(counts %>% filter(str_detect(Metric, "^Split")), aes(x=ID, y=Value, fill=Squashed)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_grid(Metric~., scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    ggtitle("Counts of variants detected from split alignments")
+ggsave("plots/split_counts.png")
+
+ggplot(counts %>% filter(str_detect(Metric, "^total")) %>% filter(!str_detect(Metric, "our")), aes(x=ID, y=Value, fill=Squashed)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_wrap("Metric") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    ggtitle("Total 50bp+ SV calls combined cigar and split alignments")
+ggsave("plots/total_sv_counts.png")
 
 small_variants <- data.frame()
 for (in_file in small_variants_files$file) {
@@ -30,7 +87,9 @@ for (in_file in small_variants_files$file) {
 }
 small_variants <- small_variants %>% filter(Subset == "*" & Subtype=="*") %>% filter(Filter == "PASS" | Filter=="*")
 small_variants$Subset <- recode(small_variants$Subset, "*"="ALL")
-ggplot(small_variants, aes(x=Assembly, y=METRIC.Recall)) +
+small_variants$Type <- factor(small_variants$Type, levels=c("SNP", "INDEL"))
+small_variants <- merge(small_variants, assemblies, by.x="Assembly", by.y="Name")
+ggplot(small_variants, aes(x=ID, y=METRIC.Recall, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_grid(Type~.) +
     theme_bw() +
@@ -76,19 +135,20 @@ indels2$truthHetToHomalt <- indels2$truthHetMatched - indels2$truthHetToHet
 indels2$truthHetToHomref <- indels2$totalTruthHet - indels2$truthHetMatched
 indels <- melt(indels2, id.vars=c("Assembly", "slop"), variable.name="Metric", value.name="Value")
 
-ggplot(indels %>% filter(Metric == "truthHetToHomalt" | Metric == "truthHetToHet" | Metric == "truthHetToHomref"), aes(x=Assembly, y=Value, fill=Metric)) +
+indels <- merge(indels, assemblies, by.x="Assembly", by.y="Name")
+ggplot(indels %>% filter(Metric == "truthHetToHomalt" | Metric == "truthHetToHet" | Metric == "truthHetToHomref"), aes(x=ID, y=Value, fill=Metric)) +
     geom_bar(stat="identity", position="stack") +
-    facet_wrap("slop", scales="free") +
+    facet_grid(slop~Squashed, scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=90, hjust=1, size=7)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=5)) +
     ggtitle("Fates of heterozygous indels from truthset")
-ggsave("plots/truthHetIndelFates.png")
+ggsave("plots/truthHetIndelFates.png", width=8, height=6, units="in")
 
-ggplot(indels %>% filter(Metric == "truthHetToHomalt" | Metric == "truthHetToHomref"), aes(x=Assembly, y=Value, fill=Metric)) +
+ggplot(indels %>% filter(Metric == "truthHetToHomalt" | Metric == "truthHetToHomref"), aes(x=ID, y=Value, fill=Metric)) +
     geom_bar(stat="identity", position="stack") +
-    facet_wrap("slop", scales="free") +
+    facet_grid(slop~Squashed, scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=90, hjust=1, size=7)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("Fates of heterozygous indels from truthset")
 ggsave("plots/truthHetIndelFatesErrorsOnly.png")
 
@@ -137,22 +197,25 @@ sv2$sensitivity[is.na(sv2$sensitivity)] <- sv2$"Reciprocal overlap GiaB_HG002"[i
 sv2$count <- sv2$"pairtopair GiaB_HG002 vs combined calls"
 sv2$count[is.na(sv2$count)] <- sv2$"Reciprocal overlap GiaB_HG002"[is.na(sv2$count)]
 
-ggplot(sv2 %>% filter(Region != "ALL"), aes(x=Assembly, y=count, fill=Filter)) +
+sv2 <- merge(sv2, assemblies, by.x="Assembly", by.y="Name")
+ggplot(sv2 %>% filter(Region != "ALL") %>% filter(Filter!= "ALL"), aes(x=ID, y=count, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_grid(Region~Overlap, scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("SV sensitivity counts")
-ggsave("plots/sv.sensitivityCounts.png")
+ggsave("plots/sv.sensitivityCounts.png", width=10, height=10, units="in")
 
-ggplot(sv2 %>% filter(Region != "ALL"), aes(x=Assembly, y=sensitivity, fill=Filter)) +
+ggplot(sv2 %>% filter(Region != "ALL") %>% filter(Filter != "ALL"), aes(x=ID, y=sensitivity, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_grid(Region~Overlap, scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=45, hjust=1, size=7)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("SV sensitivity")
-ggsave("plots/sv.sensitivity.png")
+ggsave("plots/sv.sensitivity.png", width=10, height=10, units="in")
 
+genome_cov <- data.frame()
+cov_summary <- data.frame()
 for (in_file in genome_cov_files$file) {
     assembly <- gsub(".genomecov.noGaps.hist", "", basename(in_file))
     cov <- read.table(file=in_file, header=FALSE, sep="\t", col.names=c("chrom", "cov", "bp"))
@@ -162,6 +225,8 @@ for (in_file in genome_cov_files$file) {
     gt9_zoomed <- gt9 %>% group_by(chrom) %>% summarize(bp=sum(bp))
     gt9_zoomed$cov <- 10
     cov_zoomed <- rbind(lt10, gt9_zoomed)
+    cov_zoomed$Assembly <- assembly
+    genome_cov <- rbind(genome_cov, cov_zoomed)
     ggplot(cov_zoomed, aes(x=cov, y=bp)) +
         geom_bar(stat="identity", position="dodge") +
         facet_wrap("chrom", scales="free") +
@@ -178,6 +243,8 @@ for (in_file in genome_cov_files$file) {
     summary_bp <- covDip_zoomed %>% group_by(cov) %>% summarize(sum=as.numeric(sum(as.numeric(bp))))
     total_bp <- sum(summary_bp$sum)
     summary_bp$percent <- summary_bp$sum/total_bp
+    summary_bp$Assembly <- assembly
+    cov_summary <- rbind(cov_summary, summary_bp)
 
     ggplot(summary_bp, aes(x=cov, y=percent)) +
         geom_bar(stat="identity", position="dodge") +
@@ -186,9 +253,29 @@ for (in_file in genome_cov_files$file) {
         ggtitle(assembly)
     ggsave(paste("plots", paste(assembly, "no_gaps_coverage_summary.png", sep="."), sep="/"))
 }
+genome_cov <- merge(genome_cov, assemblies, by.x="Assembly", by.y="Name")
+ggplot(genome_cov, aes(x=cov, y=bp)) +
+    geom_boxplot() +
+    facet_grid(Squashed~chrom, scales="free") +
+    scale_x_discrete(name="Coverage") +
+    theme_bw() +
+    ggtitle("Coverage by chromosome, excludes ref gaps")
+ggsave(paste("plots", "no_gaps_coverage.png", sep="/"))
+
+cov_summary <- merge(cov_summary, assemblies, by.x="Assembly", by.y="Name")
+cov_summary$cov <- as.character(cov_summary$cov)
+cov_summary$cov[cov_summary$cov=="10"] <- "10+"
+cov_summary$cov <- factor(cov_summary$cov, levels=c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"))
+ggplot(cov_summary, aes(x=cov, y=percent)) +
+    geom_boxplot() +
+    facet_grid(.~Squashed, scales="free") +
+    scale_x_discrete(name="Coverage") +
+    theme_bw() +
+    ggtitle("Coverage for chr1-22, excludes ref gaps")
+ggsave(paste("plots", "no_gaps_coverage_summary.png", sep="/"))
 
 for (in_file in nonRep_lengths_files$file) {
-    assembly <- gsub(".ours.nonRep.lengths.hist", "", basename(in_file))
+    assembly <- gsub(".ours.nonRep.lengths.txt", "", basename(in_file))
     sv_nonrep <- read.table(in_file, header=FALSE, col.names=c("type", "length"))
     sv_nonrep$region <- "nonRep"
     sv_str <- read.table(gsub("nonRep", "str", in_file), header=FALSE, col.names=c("type", "length"))
@@ -222,7 +309,7 @@ for (in_file in nonRep_lengths_files$file) {
         geom_histogram(binwidth=10) +
         facet_grid(region~type, scales="free") +
         theme_bw() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1, size=7)) +
         ggtitle(assembly)
     ggsave(file=paste("plots", paste(assembly, "sv_lengths.png", sep="."), sep="/"))
 }
@@ -239,40 +326,67 @@ for (in_file in nonRep_types_files$file) {
 }
 svCounts$Sample <- gsub("\\..*", "", svCounts$Assembly)
 svCounts <- merge(svCounts, populations, by="Sample")
+svCounts <- merge(svCounts, assemblies, by.x="Assembly", by.y="Name")
 
-ggplot(svCounts %>% filter(Type=="nonRep"), aes(x=Assembly, y=Value, fill=Superpopulation)) +
+ggplot(svCounts %>% filter(Type=="nonRep") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Superpopulation)) +
     geom_bar(stat="identity", position="dodge") +
     facet_wrap("Metric", scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=90, hjust=1, size=6)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("Non-repetitive SV counts by type")
-    ggsave("plots/nonrepSvCounts.png", width=12, height=8, units="in")
+    ggsave("plots/nonrepSvCountsPopulation.png", width=12, height=8, units="in")
 
-ggplot(svCounts %>% filter(Type=="str"), aes(x=Assembly, y=Value, fill=Superpopulation)) +
+ggplot(svCounts %>% filter(Type=="nonRep") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_wrap("Metric", scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=90, hjust=1, size=6)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
+    ggtitle("Non-repetitive SV counts by type")
+    ggsave("plots/nonrepSvCountsSquashed.png", width=12, height=8, units="in")
+
+ggplot(svCounts %>% filter(Type=="str") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Superpopulation)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_wrap("Metric", scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("STR SV counts by type")
-ggsave("plots/strSvCounts.png", width=12, height=8, units="in")
+ggsave("plots/strSvCountsPopulation.png", width=12, height=8, units="in")
 
-ggplot(svCounts %>% filter(Type=="segDup"), aes(x=Assembly, y=Value, fill=Superpopulation)) +
+ggplot(svCounts %>% filter(Type=="str") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_wrap("Metric", scales="free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle=90, hjust=1, size=6)) +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
+    ggtitle("STR SV counts by type")
+ggsave("plots/strSvCountsSquashed.png", width=12, height=8, units="in")
+
+ggplot(svCounts %>% filter(Type=="segDup") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Superpopulation)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_wrap("Metric", scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
     ggtitle("SegDup SV counts by type")
-ggsave("plots/segDupSvCounts.png", width=12, height=8, units="in")
+ggsave("plots/segDupSvCountsPopulation.png", width=12, height=8, units="in")
+
+ggplot(svCounts %>% filter(Type=="segDup") %>% filter(!str_detect(Metric, "^G")), aes(x=ID, y=Value, fill=Squashed)) +
+    geom_bar(stat="identity", position="dodge") +
+    facet_wrap("Metric", scales="free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle=45, hjust=1, size=6)) +
+    ggtitle("SegDup SV counts by type")
+ggsave("plots/segDupSvCountsSquashed.png", width=12, height=8, units="in")
 
 het <- data.frame()
 for (in_file in het_fates_files$file) {
-    assembly <- gsub(".het.counts.horizontal.txt", "", basename(in_file))
+    assembly <- gsub(".happy.het.counts.horizontal.txt", "", basename(in_file))
     df <- read.table(in_file, header=FALSE, col.names=c("Type", "Origin", "Fate", "Value"))
     df$Assembly <- assembly
     het <- rbind(het, df)
 }
-
-ggplot(het, aes(x=Assembly, y=Value, fill=Fate)) +
+het$Type <- factor(het$Type, levels=c("SNP", "INDEL"))
+het <- merge(het, assemblies, by.x="Assembly", by.y="Name")
+het$ID[het$Squashed] <- paste(het$ID[het$Squashed], "*")
+ggplot(het, aes(x=ID, y=Value, fill=Fate)) +
     geom_bar(stat="identity", position="stack") +
     facet_grid(Type~Origin, scales="free") +
     theme_bw() +
@@ -282,7 +396,7 @@ ggsave("plots/het_fates.png")
 
 rep <- data.frame()
 for (in_file in str_venn_files$file) {
-    assembly <- gsub(".str.VennInput.txt", "", basename(in_file))
+    assembly <- gsub(".sv.str.VennInput.txt", "", basename(in_file))
     df <- read.table(in_file, header=FALSE, row.names=c("A", "B", "C", "AandB", "BandC", "AandC", "AandBandC"))
     df2 <- transpose(df)
     colnames(df2) <- rownames(df)
@@ -296,7 +410,6 @@ for (in_file in str_venn_files$file) {
     df2$Region <- "segDup"
     rep <- rbind(rep, df2)
 }
-head(rep)
 rep$totalGiaBPass <- rep$A
 rep$totalGiaB <- rep$B
 rep$totalOurs <- rep$C
@@ -305,8 +418,8 @@ rep$sensitivityPass <- rep$AandC/rep$totalGiaBPass
 rep$count <- rep$BandC
 rep$countPass <- rep$AandC
 rep2 <- melt(rep, id.vars=c("Assembly", "Region"))
-head(rep2)
-ggplot(rep2 %>% filter(variable=="sensitivityPass"), aes(x=Assembly, y=value)) +
+rep2 <- merge(rep2, assemblies, by.x="Assembly", by.y="Name")
+ggplot(rep2 %>% filter(variable=="sensitivityPass"), aes(x=ID, y=value, fill=Squashed)) +
     geom_bar(stat="identity", position="dodge") +
     facet_grid(Region~., scales="free") +
     theme_bw() +
