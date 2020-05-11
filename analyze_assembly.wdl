@@ -9,6 +9,7 @@ workflow AnalyzeAssembly {
         File? truth_vcf_snp_indel
         File? truth_confident_region
         File? truth_vcf_sv
+        File? truth_confident_region_sv
         File gap_file
         File str_track
         File seg_dup_track
@@ -43,6 +44,7 @@ workflow AnalyzeAssembly {
             input:
                 bedpe=align_contigs.bedpe,
                 truth=truth_vcf_sv,
+                truth_confident_region=truth_confident_region_sv,
                 output_prefix=output_prefix,
                 sample_name=sample_name,
                 truth_name=truth_name,
@@ -100,7 +102,7 @@ task compare_indels {
     >>>
     runtime {
         memory: "16G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
     }
     output {
         File counts="${output_prefix}.indels.indel.counts.horizontal.txt"
@@ -111,6 +113,7 @@ task compare_svs {
     input {
         File bedpe
         File? truth
+        File? truth_confident_region
         File str_bed
         File seg_dup_bed
         String output_prefix
@@ -123,7 +126,7 @@ task compare_svs {
     >>>
     runtime {
         memory: "8G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
     }
     output {
         File counts="${output_prefix}.sv.counts.horizontal.txt"
@@ -192,7 +195,7 @@ task align_contigs {
     >>>
     runtime {
         memory: "64G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
     }
     output {
         File genotyped_vcf="${output_prefix}.loose.genotyped.vcf.gz"
