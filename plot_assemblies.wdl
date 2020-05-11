@@ -65,7 +65,7 @@ workflow PlotAssemblies {
     }
 
     output {
-    	File plot_tarball = make_plots.plots_tar
+        File inputs_txt = make_plots.inputs_txt
     }
 }
 
@@ -110,12 +110,27 @@ task make_plots {
         RSCRIPT=/usr/local/bin/Rscript
         SCRIPT=/opt/hall-lab/make_plots.R
         ${RSCRIPT} ${SCRIPT} ~{populations} ~{small_variants_fof} ~{indels_fof} ~{sv_fof} ~{genome_cov_fof} ~{nonRep_lengths_fof} ~{str_lengths_fof} ~{segDup_lengths_fof} ~{counts_fof} ~{nonRep_types_fof} ~{str_types_fof} ~{segDup_types_fof} ~{het_fates_fof} ~{str_venn_fof} ~{segDup_venn_fof} ~{cigar_indel_lengths_fof} ~{assembly_file}
+        echo "counts_horizontal <- paste(dir, \"~{counts_fof}\", sep=\"/\")" > notebook_inputs.txt
+        echo "str_typeCount <- paste(dir, \"~{str_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "nonRep_typeCount <- paste(dir, \"~{nonRep_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "nonRep_lengths <- paste(dir, \"~{nonRep_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "sv_str_VennInput <- paste(dir, \"~{str_venn_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "str_lengths <- paste(dir, \"~{str_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "happy_extended <- paste(dir, \"~{small_variants_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "genomecov_noGaps <- paste(dir, \"~{genome_cov_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "segDup_typeCount <- paste(dir, \"~{segDup_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "indel_lengths_horizontal <- paste(dir, \"~{cigar_indel_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "happy_het_counts_horizontal <- paste(dir, \"~{het_fates_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "segDup_lengths <- paste(dir, \"~{segDup_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "sv_segDup_VennInput <- paste(dir, \"~{segDup_venn_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "indel_counts <- paste(dir, \"~{indels_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        echo "sv_counts_horizontal <- paste(dir, \"~{sv_fof}\", sep=\"/\")" >> notebook_inputs.txt
     >>>
     runtime {
-        docker: "apregier/plot_assemblies@sha256:32e0f400595dc98c05a2fa31023e9558bd51c71e60e2069b48222b561d459668"
+        docker: "apregier/plot_assemblies@sha256:862046f8c3cbe6519999e176d1d451c57117c9cfd3178f5fd8b51464fe44b281"
         memory: "4 GB"
     }
     output {
-        File plots_tar="plots.tar.gz"
+        File inputs_txt="notebook_inputs.txt"
     }
 }
