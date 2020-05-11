@@ -59,7 +59,9 @@ workflow PlotAssemblies {
             segDup_types=analyze_assembly.segDup_types,
             het_fates=select_all(analyze_assembly.het_fates),
             str_venn=select_all(analyze_assembly.str_venn),
-            segDup_venn=select_all(analyze_assembly.segDup_venn)
+            segDup_venn=select_all(analyze_assembly.segDup_venn),
+            cigar_indel_lengths=analyze_assembly.cigar_indel_lengths,
+            assembly_file=assembly_list
     }
 
     output {
@@ -83,7 +85,9 @@ task make_plots {
         Array[File] het_fates
         Array[File] str_venn
         Array[File] segDup_venn
+        Array[File] cigar_indel_lengths
         File populations
+        File assembly_file
         File small_variants_fof = write_lines(small_variants)
         File indels_fof = write_lines(indels)
         File sv_fof = write_lines(sv)
@@ -98,13 +102,14 @@ task make_plots {
         File het_fates_fof = write_lines(het_fates)
         File str_venn_fof = write_lines(str_venn)
         File segDup_venn_fof = write_lines(segDup_venn)
+        File cigar_indel_lengths_fof = write_lines(cigar_indel_lengths)
     }
     command <<<
         set -exo pipefail
         mkdir -p plots
         RSCRIPT=/usr/local/bin/Rscript
-        ${RSCRIPT} /opt/hall-lab/make_plots.R ~{populations} ~{small_variants_fof} ~{indels_fof} ~{sv_fof} ~{genome_cov_fof} ~{nonRep_lengths_fof} ~{str_lengths_fof} ~{segDup_lengths_fof} ~{counts_fof} ~{nonRep_types_fof} ~{str_types_fof} ~{segDup_types_fof} ~{het_fates_fof} ~{str_venn_fof} ~{segDup_venn_fof}
-        tar -czf plots.tar.gz plots
+        SCRIPT=/opt/hall-lab/make_plots.R
+        ${RSCRIPT} ${SCRIPT} ~{populations} ~{small_variants_fof} ~{indels_fof} ~{sv_fof} ~{genome_cov_fof} ~{nonRep_lengths_fof} ~{str_lengths_fof} ~{segDup_lengths_fof} ~{counts_fof} ~{nonRep_types_fof} ~{str_types_fof} ~{segDup_types_fof} ~{het_fates_fof} ~{str_venn_fof} ~{segDup_venn_fof} ~{cigar_indel_lengths_fof} ~{assembly_file}
     >>>
     runtime {
         docker: "apregier/plot_assemblies@sha256:32e0f400595dc98c05a2fa31023e9558bd51c71e60e2069b48222b561d459668"
