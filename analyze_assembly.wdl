@@ -29,6 +29,11 @@ workflow AnalyzeAssembly {
             str_track=str_track,
             seg_dup_track=seg_dup_track
     }
+    call get_indel_lengths {
+        input:
+            vcf=align_contigs.genotyped_vcf,
+            output_prefix=output_prefix
+    }
     if (truth_name != "NONE") {
         call compare_indels {
             input:
@@ -80,6 +85,7 @@ workflow AnalyzeAssembly {
             File nonRep_types=align_contigs.nonRep_types
             File str_types=align_contigs.str_types
             File segDup_types=align_contigs.segDup_types
+            File cigar_indel_lengths=get_indel_lengths.cigar_indel_lengths
             File? het_fates=calculate_het_fates.het_counts
             File? str_venn=compare_svs.str_venn
             File? segDup_venn=compare_svs.segDup_venn
@@ -171,10 +177,29 @@ task calculate_het_fates {
     >>>
     runtime {
         memory: "4G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
     }
     output {
         File het_counts="${output_prefix}.happy.het.counts.horizontal.txt"
+    }
+}
+
+task get_indel_lengths {
+    input {
+        File vcf
+        String output_prefix
+    }
+    command <<<
+        set -exo pipefail
+        touch tmp.2
+        /opt/hall-lab/python-2.7.15/bin/python /storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/assembly_validation/docker/analyze_assemblies/scripts/sv_lengths.py -v ~{vcf} -o ~{output_prefix}.indel_lengths.horizontal.txt
+    >>>
+    runtime {
+        memory: "4G"
+        docker: "apregier/analyze_assemblies@sha256:ea77e82820aa6216624cb0682bf12be16639b65b285fb10df9c8954c0be6002d"
+    }
+    output {
+        File cigar_indel_lengths="${output_prefix}.indel_lengths.horizontal.txt"
     }
 }
 
