@@ -3,8 +3,6 @@
 import json
 import click
 
-template = "VariantCalling.ipynb"
-
 def file_paths(tsv):
     input_files = {}
     with open(tsv, 'r') as f:
@@ -31,7 +29,7 @@ def update_notebook(template, tsv, output):
 @click.option('--template', required=True, type=click.Path(exists=True), help='Template for jupyter notebook')
 @click.option('--output', required=True, type=click.Path(exists=False), help='Path to output notebook file')
 
-def main(tsv):
+def main(tsv, template, output):
     update_notebook(template, tsv, output)
 
 if __name__=="__main__":
