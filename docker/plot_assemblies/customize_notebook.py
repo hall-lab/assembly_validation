@@ -21,7 +21,8 @@ def update_notebook(template, tsv, output):
     with open(template, 'r') as f:
         data = json.load(f)
     input_files = file_paths(tsv)
-    data['cells'][2]['source'] = [format_file_path(k, input_files[k]) for k in input_files.keys()]
+    file_path_cells = [cell for cell in data['cells'] if 'metadata' in cell and 'tags' in cell['metadata'] and 'file_paths' in cell['metadata']['tags']]
+    file_path_cells[0]['source'] = [format_file_path(k, input_files[k]) for k in input_files.keys()]
     with open(output, 'w') as f2:
         json.dump(data, f2, indent=4)
 
