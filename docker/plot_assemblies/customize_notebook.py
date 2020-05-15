@@ -17,12 +17,12 @@ def format_file_path(variable, file_path):
     msg = '{} <- paste(dir, "{}", sep="/")\n'
     return msg.format(variable, file_path)
 
-def update_notebook(template, tsv):
+def update_notebook(template, tsv, output):
     with open(template, 'r') as f:
         data = json.load(f)
     input_files = file_paths(tsv)
     data['cells'][2]['source'] = [format_file_path(k, input_files[k]) for k in input_files.keys()]
-    with open("new.ipynb", 'w') as f2:
+    with open(output, 'w') as f2:
         json.dump(data, f2, indent=4)
 
 @click.command()
@@ -31,7 +31,7 @@ def update_notebook(template, tsv):
 @click.option('--output', required=True, type=click.Path(exists=False), help='Path to output notebook file')
 
 def main(tsv):
-    update_notebook(template, tsv)
+    update_notebook(template, tsv, output)
 
 if __name__=="__main__":
     main()
