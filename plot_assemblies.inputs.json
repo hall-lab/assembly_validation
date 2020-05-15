@@ -9,5 +9,6 @@
     "PlotAssemblies.truth_list_sv_confident_region": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/assembly_validation/truth_sets/truth_list_sv_confident_region.txt",
     "PlotAssemblies.gap_file": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/igv_tracks/ira_b38_061117/gap.053117.b38.sorted.bed",
     "PlotAssemblies.str_track": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/igv_tracks/ira_b38_061117/simpleRepeat.b38.sorted.bed",
-    "PlotAssemblies.seg_dup_track": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/igv_tracks/ira_b38_061117/genomicSuperDups.b38.sorted.bed"
+    "PlotAssemblies.seg_dup_track": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/igv_tracks/ira_b38_061117/genomicSuperDups.b38.sorted.bed",
+    "PlotAssemblies.jupyter_notebook_template": "/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/assembly_validation/VariantCalling.ipynb"
 }

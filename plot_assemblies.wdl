@@ -14,6 +14,7 @@ workflow PlotAssemblies {
         File truth_list_confident_region
         File truth_list_sv_vcf
         File truth_list_sv_confident_region
+        File jupyter_notebook_template
     }
     Array[Array[File]] assemblies = read_tsv(assembly_list)
     Map[String, File] truthsets_snp_indel = read_map(truth_list_snp_indel)
@@ -61,11 +62,12 @@ workflow PlotAssemblies {
             str_venn=select_all(analyze_assembly.str_venn),
             segDup_venn=select_all(analyze_assembly.segDup_venn),
             cigar_indel_lengths=analyze_assembly.cigar_indel_lengths,
-            assembly_file=assembly_list
+            assembly_file=assembly_list, 
+            template=jupyter_notebook_template
     }
 
     output {
-        File inputs_txt = make_plots.inputs_txt
+        File jupyter_notebook = make_plots.jupyter_notebook
     }
 }
 
@@ -107,30 +109,29 @@ task make_plots {
     command <<<
         set -exo pipefail
         mkdir -p plots
-        RSCRIPT=/usr/local/bin/Rscript
-        SCRIPT=/opt/hall-lab/make_plots.R
-        ${RSCRIPT} ${SCRIPT} ~{populations} ~{small_variants_fof} ~{indels_fof} ~{sv_fof} ~{genome_cov_fof} ~{nonRep_lengths_fof} ~{str_lengths_fof} ~{segDup_lengths_fof} ~{counts_fof} ~{nonRep_types_fof} ~{str_types_fof} ~{segDup_types_fof} ~{het_fates_fof} ~{str_venn_fof} ~{segDup_venn_fof} ~{cigar_indel_lengths_fof} ~{assembly_file}
-        echo "counts_horizontal <- paste(dir, \"~{counts_fof}\", sep=\"/\")" > notebook_inputs.txt
-        echo "str_typeCount <- paste(dir, \"~{str_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "nonRep_typeCount <- paste(dir, \"~{nonRep_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "nonRep_lengths <- paste(dir, \"~{nonRep_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "sv_str_VennInput <- paste(dir, \"~{str_venn_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "str_lengths <- paste(dir, \"~{str_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "happy_extended <- paste(dir, \"~{small_variants_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "genomecov_noGaps <- paste(dir, \"~{genome_cov_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "segDup_typeCount <- paste(dir, \"~{segDup_types_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "indel_lengths_horizontal <- paste(dir, \"~{cigar_indel_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "happy_het_counts_horizontal <- paste(dir, \"~{het_fates_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "segDup_lengths <- paste(dir, \"~{segDup_lengths_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "sv_segDup_VennInput <- paste(dir, \"~{segDup_venn_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "indel_counts <- paste(dir, \"~{indels_fof}\", sep=\"/\")" >> notebook_inputs.txt
-        echo "sv_counts_horizontal <- paste(dir, \"~{sv_fof}\", sep=\"/\")" >> notebook_inputs.txt
+        SCRIPT=/opt/hall-lab/customize_notebook.py
+        echo "counts_horizontal	~{counts_fof}" > notebook_inputs.tsv
+        echo "str_typeCount	~{str_types_fof}" >> notebook_inputs.tsv
+        echo "nonRep_typeCount	~{nonRep_types_fof}" >> notebook_inputs.tsv
+        echo "nonRep_lengths	~{nonRep_lengths_fof}" >> notebook_inputs.tsv
+        echo "sv_str_VennInput	~{str_venn_fof}" >> notebook_inputs.tsv
+        echo "str_lengths	~{str_lengths_fof}" >> notebook_inputs.tsv
+        echo "happy_extended	~{small_variants_fof}" >> notebook_inputs.tsv
+        echo "genomecov_noGaps	~{genome_cov_fof}" >> notebook_inputs.tsv
+        echo "segDup_typeCount	~{segDup_types_fof}" >> notebook_inputs.tsv
+        echo "indel_lengths_horizontal	~{cigar_indel_lengths_fof}" >> notebook_inputs.tsv
+        echo "happy_het_counts_horizontal	~{het_fates_fof}" >> notebook_inputs.tsv
+        echo "segDup_lengths	~{segDup_lengths_fof}" >> notebook_inputs.tsv
+        echo "sv_segDup_VennInput	~{segDup_venn_fof}" >> notebook_inputs.tsv
+        echo "indel_counts	~{indels_fof}" >> notebook_inputs.tsv
+        echo "sv_counts_horizontal	~{sv_fof}" >> notebook_inputs.tsv
+        $SCRIPT --tsv notebook_inputs.tsv --template ~{template} --output new.ipynb
     >>>
     runtime {
         docker: "apregier/plot_assemblies@sha256:1551ac071577a9bf893fcdc4526710680876786183331338c85e6a1e43b5462d"
         memory: "4 GB"
     }
     output {
-        File inputs_txt="notebook_inputs.txt"
+        File jupyter_notebook="new.ipynb"
     }
 }

@@ -27,6 +27,9 @@ def update_notebook(template, tsv):
 
 @click.command()
 @click.option('--tsv', required=True, type=click.Path(exists=True), help='Map of input files for jupyter notebook')
+@click.option('--template', required=True, type=click.Path(exists=True), help='Template for jupyter notebook')
+@click.option('--output', required=True, type=click.Path(exists=False), help='Path to output notebook file')
+
 def main(tsv):
     update_notebook(template, tsv)
 
