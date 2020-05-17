@@ -128,7 +128,7 @@ task make_plots {
         $SCRIPT --tsv notebook_inputs.tsv --template ~{template} --output new.ipynb
     >>>
     runtime {
-        docker: "apregier/plot_assemblies@sha256:d22a7a3c69d31aa183950ece6d83d2e7aa1cbc3248b507e9b6d1bc970041a385"
+        docker: "apregier/plot_assemblies@sha256:436cb951a37b4fb953d98d9fdf1aad556db538f7df4b17a04ea2354d55ea94e1"
         memory: "4 GB"
     }
     output {

@@ -3,5 +3,6 @@ LABEL maintainer "Allison Regier <aregier@wustl.edu>"
 
 RUN mkdir -p /opt/hall-lab
 ADD customize_notebook.py /opt/hall-lab
+RUN chmod a+x /opt/hall-lab/customize_notebook.py
 
 CMD ["/bin/bash"]
