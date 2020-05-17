@@ -90,6 +90,7 @@ task make_plots {
         Array[File] cigar_indel_lengths
         File populations
         File assembly_file
+        File template
         File small_variants_fof = write_lines(small_variants)
         File indels_fof = write_lines(indels)
         File sv_fof = write_lines(sv)
