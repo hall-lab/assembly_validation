@@ -111,12 +111,8 @@ task make_plots {
         set -exo pipefail
         mkdir -p plots
         SCRIPT=/opt/hall-lab/customize_notebook.py
-        cp ~{populations} .
-        cp ~{assembly_file} .
-        POPULATIONS=`basename ~{populations}`
-        ASSEMBLY_FILE=`basename ~{assembly_file}`
-        echo "pop	$POPULATIONS" > notebook_inputs.tsv
-        echo "assembly_tsv	$ASSEMBLY_FILE" >> notebook_inputs.tsv
+        echo "pop	~{populations}" > notebook_inputs.tsv
+        echo "assembly_tsv	~{assembly_file}" >> notebook_inputs.tsv
         echo "counts_horizontal	~{counts_fof}" >> notebook_inputs.tsv
         echo "str_typeCount	~{str_types_fof}" >> notebook_inputs.tsv
         echo "nonRep_typeCount	~{nonRep_types_fof}" >> notebook_inputs.tsv
