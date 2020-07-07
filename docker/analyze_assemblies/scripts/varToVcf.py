@@ -27,7 +27,7 @@ def parseLine(line, ref, out, minimumSize):
         if (minimumSize > 1):
             return
         filt="contigCount_"+varList[4]
-    out.write("\t".join((varList[1], str(start), ".", refBase.upper(), altBase.upper(), varList[5], ".", "COV="+varList[4], "GT", "1|."))+"\n")
+    out.write("\t".join((varList[1], str(start), ".", refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+varList[9]]), "GT", "1|."))+"\n")
 
 def processVar(opts):
     ref = pysam.Fastafile(opts.refFile)
