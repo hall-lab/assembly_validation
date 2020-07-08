@@ -35,7 +35,7 @@ def parseLine(line, ref, out, out2, minimumSize, id):
         altBase = varList[7]
         start = int(varList[3])
     out.write("\t".join((varList[1], str(start), id, refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+varList[9]]), "GT", "1|."))+"\n")
-    out2.write("\t".join((varList[8], str(start2, id, refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+varList[2]]), "GT", "1|."))+"\n")
+    out2.write("\t".join((varList[8], str(start2), id, refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+varList[2]]), "GT", "1|."))+"\n")
 
 def processVar(opts):
     ref = pysam.Fastafile(opts.refFile)
@@ -49,8 +49,8 @@ def processVar(opts):
     with open(opts.inFile) as inVar:
         for line in inVar:
             if (line.startswith("V")):
-                id = "{}.{}".format(idPrefix, str(counter))
-                parseLine(line, ref, out, out2, opts.minimumSize, opts.idPrefix)
+                id = "{}.{}".format(opts.idPrefix, str(counter))
+                parseLine(line, ref, out, out2, opts.minimumSize, id)
                 counter = counter + 1
     out.close()
     out2.close()
