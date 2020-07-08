@@ -4,8 +4,7 @@ import sys
 from optparse import OptionParser
 import pysam
 
-counter = 0
-def parseLine(line, ref, out, out2, minimumSize, idPrefix):
+def parseLine(line, ref, out, out2, minimumSize, id):
     varList = line.strip().split('\t')
     if (varList[6] == "-"): #insertion
         if (len(varList[7]) < minimumSize):
@@ -35,8 +34,6 @@ def parseLine(line, ref, out, out2, minimumSize, idPrefix):
         refBase = varList[6]
         altBase = varList[7]
         start = int(varList[3])
-    id = "{}.{}".format(idPrefix, str(counter))
-    counter = counter + 1
     out.write("\t".join((varList[1], str(start), id, refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+varList[9]]), "GT", "1|."))+"\n")
     out2.write("\t".join((varList[8], str(start2, id, refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+varList[2]]), "GT", "1|."))+"\n")
 
@@ -48,10 +45,13 @@ def processVar(opts):
     out2 = open("{}.2.vcf".format(opts.outFile), "w")
     out2.write("##fileformat=VCFv4.2\n")
     out2.write("\t".join(("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", opts.sample))+"\n")
+    counter = 0
     with open(opts.inFile) as inVar:
         for line in inVar:
             if (line.startswith("V")):
+                id = "{}.{}".format(idPrefix, str(counter))
                 parseLine(line, ref, out, out2, opts.minimumSize, opts.idPrefix)
+                counter = counter + 1
     out.close()
     out2.close()
 
