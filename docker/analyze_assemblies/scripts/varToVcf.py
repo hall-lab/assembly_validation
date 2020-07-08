@@ -4,41 +4,53 @@ import sys
 from optparse import OptionParser
 import pysam
 
-def parseLine(line, ref, out, minimumSize):
+def parseLine(line, ref, out, out2, minimumSize):
     varList = line.strip().split('\t')
     if (varList[6] == "-"): #insertion
+        if (len(varList[7]) < minimumSize):
+            return
         start = int(varList[2])
         padding = ref.fetch(varList[1], start-1, start)
         refBase = padding
         altBase = padding + varList[7]
-        if (len(varList[7]) < minimumSize):
-            return
+        start2 = int(varList[9])
+        padding2 = ref.fetch(varList[8], start2-1, start2)
+        altBase2 = padding2
+        refBase2 = padding2 + varList[6]
     elif (varList[7] == "-"): #deletion
+        if (len(varList[6]) < minimumSize):
+            return
         start = int(varList[2])
         padding = ref.fetch(varList[1], start-1, start)
         altBase = padding
         refBase = padding + varList[6]
-        if (len(varList[6]) < minimumSize):
-            return
+        start2 = int(varList[9])
+        padding2 = query.fetch(varList[8], start2-1, start2)
+        refBase2 = padding2
+        altBase2 = padding2 + varList[7]
     else:
+        if (minimumSize > 1):
+            return
         refBase = varList[6]
         altBase = varList[7]
         start = int(varList[3])
-        if (minimumSize > 1):
-            return
-        filt="contigCount_"+varList[4]
     out.write("\t".join((varList[1], str(start), ".", refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+varList[9]]), "GT", "1|."))+"\n")
+    out2.write("\t".join((varList[8], str(start2, ".", refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+varList[2]]), "GT", "1|."))+"\n")
 
 def processVar(opts):
     ref = pysam.Fastafile(opts.refFile)
     out = open(opts.outFile, "w")
     out.write("##fileformat=VCFv4.2\n")
     out.write("\t".join(("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", opts.sample))+"\n")
+    out2 = open("{}.2.vcf".format(opts.outFile), "w")
+    out2.write("##fileformat=VCFv4.2\n")
+    out2.write("\t".join(("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", opts.sample))+"\n")
     with open(opts.inFile) as inVar:
         for line in inVar:
             if (line.startswith("V")):
-                parseLine(line, ref, out, opts.minimumSize)
+                parseLine(line, ref, out, out2, opts.minimumSize)
     out.close()
+    out2.close()
 
 def main():
 
