@@ -20,9 +20,7 @@ while (my $line = <>) {
         print $line."\n";
     }
     elsif ($line =~ "^#") {
-        print "##INFO=<ID=COV,Number=.,Type=Integer,Description=\"Contig coverage at this position\">\n";
-        print "##INFO=<ID=QNAME,Number=.,Type=Integer,Description=\"Query name of variant\">\n";
-        print "##INFO=<ID=QSTART,Number=.,Type=Integer,Description=\"Query start pos of variant\">\n";
+        print "##INFO=<ID=COV,Number=1,Type=Integer,Description=\"Contig coverage at this position\">\n";
         print "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
         print $line."\n";
     }
@@ -45,7 +43,7 @@ while (my $line = <>) {
             $prev_filter = $filter;
             $prev_info = $info;
             $prev_format = $format;
-            if ($prev_info =~ /COV=1;/) {
+            if ($prev_info eq "COV=1") {
                 $prev_gt = "1/1";
             }
             else {
@@ -74,24 +72,6 @@ while (my $line = <>) {
                 }
                 $prev_alt = join(",", $prev_alt, $alt);
             }
-            my @cov = ();
-            my @qname = ();
-            my @qstart = ();
-            my @prev_info_array = split(";", $prev_info);
-            my @info_array = split(";", $info);
-            foreach my $info_entry (c(@prev_info_array, @info_array)) {
-                my ($key, $value) = split("=", $info_entry);
-                if ($key eq "COV") {
-                    push @cov, $value;
-                }
-                else if ($key eq "QNAME") {
-                    push @qname, $value;
-                }
-                else if ($key eq "QSTART") {
-                    push @qstart, $value;
-                }
-            }
-            $prev_info = join(";", "COV=".join(",", @cov), "QNAME=".join(",", @qname), "QSTART=".join(",", @qstart));
         }
         else {
             my @uniq_alts = do { my %seen; grep { !$seen{$_}++ } split(",", $prev_alt)};
@@ -108,7 +88,7 @@ while (my $line = <>) {
             $prev_qual = $qual;
             $prev_info = $info;
             $prev_format = $format;
-            if ($prev_info =~ /COV=1;/) {
+            if ($prev_info eq "COV=1") {
                 $prev_gt = "1/1";
             }
             else {
