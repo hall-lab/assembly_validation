@@ -44,4 +44,28 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * `truthHetIndelFatesErrorsOnly.png` - Same as above but only shows the errors to give more detailed counts.
 * `truthset.repetitive.count.png` - Counts the number of unique elements from the STR and SegDup tracks covered by the SV truthset, and determines how many of those were also found in the SV callset.
 * `truthset.repetitive.sensitivity.png` - Same as above but displayed as sensitivity.
-* `stats.tsv` - Tab-delimited file with the following summary stats for each assembly: ID, Name, snv_count, deletions, insertions, sv_count, snv_detection_sensitivity, indel_detection_sensitivity, snv_detection_specificity, indel_detection_specificity, sv_sensitivity, sv_specificity, het_snp_sensitivity, het_indel_sensitivity, hom_snp_sensitivity, hom_indel_sensitivity, DEL, INS, DUP, INV, TRANS, sv_nonrep_count, sv_str_count, sv_segdup_count
+* `stats.tsv` - Tab-delimited file with the following summary stats for each assembly:
+    * `ID`
+    * `Name`
+    * `snv_count`
+    * `deletions`
+    * `insertions`
+    * `sv_count`
+    * `snv_detection_sensitivity`
+    * `indel_detection_sensitivity`
+    * `snv_detection_specificity`
+    * `indel_detection_specificity`
+    * `sv_sensitivity`
+    * `sv_specificity`
+    * `het_snp_sensitivity`
+    * `het_indel_sensitivity`
+    * `hom_snp_sensitivity`
+    * `hom_indel_sensitivity`
+    * `DEL`
+    * `INS`
+    * `DUP`
+    * `INV`
+    * `TRANS`
+    * `sv_nonrep_count`
+    * `sv_str_count`
+    * `sv_segdup_count`
