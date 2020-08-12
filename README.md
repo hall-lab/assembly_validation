@@ -1,8 +1,8 @@
 ## Assembly evaluation pipeline
-This pipeline evaluates assemblies by aligning them to a reference, calling variants, quantifying those variants, and, if applicable, comparing them to gold-standard variant lists.  The end result is a set of plots.
+This pipeline evaluates assemblies by aligning them to a reference, calling variants, quantifying those variants, and, if applicable, comparing them to gold-standard variant lists.  The end result is a jupyter R notebook template that can be run to generate plots and a summary statistic table.
 
 ### Inputs
-* assembly_list - tab-delimited file with the fields `<assembly name> <first fasta> <second fasta> <truth name>`  If an assembly contains only one fasta, the second fasta can be set to an empty file.  If no truthset is available, `<truth name>` should be NONE.  Note that the `<assembly name>` should consist of the sample name followed by a period, followed by arbitrary other text.  Sample name should not contain a period.
+* assembly_list - tab-delimited file with the fields `<assembly name> <first fasta> <second fasta> <truth name> <assembly id> <datatype>`  If an assembly contains only one fasta, the second fasta can be set to an empty file.  If no truthset is available, `<truth name>` should be NONE.  Note that the `<assembly name>` should consist of the sample name followed by a period, followed by arbitrary other text.  Sample name should not contain a period.
 * populations - tab-delimited file connecting sample to population.  Fields are: `<sample> <population code> <superpopulation code> <sex>`
 * ref - reference fasta (not gzipped!)
 * ref_index - fai index of reference fasta
@@ -12,6 +12,7 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * gap_file - bed file denoting reference gaps
 * str_track - bed file denoting simple repeats
 * seg_dup_track - bed file denoting segmental duplications
+* jupyter_notebook_template - path to VariantCalling.ipynb
 
 ### Alignment and variant calling methodology
 1. Contigs from both fasta files (possibly representing two different haplotypes) are combined into a single fasta, with the suffixes `_H1` and `_H2` appended to contig names from the first and second fasta file, respectively.  If the second fasta file is empty, the first fasta file is simply taken as-is.
@@ -25,7 +26,10 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 5. Custom python scripts are used to call SVs based on split reads and classify them by type.
 6. Indels >= 40bp from step 3 are combined with SVs from step 5 to form a combined set of SVs.
 
-### Outputs
+### Outputs from workflow
+* `new.ipynb` is a jupyter notebook that can be opened and run to produce the final plots/table
+
+### Outputs from jupyter notebook
 * `happy.sensitivity.png` - Gives sensitivity to the snp/indel truthset as determined by hap.py
 * `het_fates.png` - For each variant in the truthset, show whether it was called heterozygous, homozygous alt, or not called (homozygous ref) in the variant callset from the assembly.
 * `<assembly name>.no_gaps_coverage_summary.png` - Gives the percentage of chr1-22 non-gap reference bases at each coverage 0X-9X, as well as 10X+
@@ -40,3 +44,4 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * `truthHetIndelFatesErrorsOnly.png` - Same as above but only shows the errors to give more detailed counts.
 * `truthset.repetitive.count.png` - Counts the number of unique elements from the STR and SegDup tracks covered by the SV truthset, and determines how many of those were also found in the SV callset.
 * `truthset.repetitive.sensitivity.png` - Same as above but displayed as sensitivity.
+* `stats.tsv` - Tab-delimited file with the following summary stats for each assembly: ID, Name, snv_count, deletions, insertions, sv_count, snv_detection_sensitivity, indel_detection_sensitivity, snv_detection_specificity, indel_detection_specificity, sv_sensitivity, sv_specificity, het_snp_sensitivity, het_indel_sensitivity, hom_snp_sensitivity, hom_indel_sensitivity, DEL, INS, DUP, INV, TRANS, sv_nonrep_count, sv_str_count, sv_segdup_count
