@@ -45,27 +45,27 @@ This pipeline evaluates assemblies by aligning them to a reference, calling vari
 * `truthset.repetitive.count.png` - Counts the number of unique elements from the STR and SegDup tracks covered by the SV truthset, and determines how many of those were also found in the SV callset.
 * `truthset.repetitive.sensitivity.png` - Same as above but displayed as sensitivity.
 * `stats.tsv` - Tab-delimited file with the following summary stats for each assembly:
-    * `ID`
-    * `Name`
-    * `snv_count`
-    * `deletions`
-    * `insertions`
-    * `sv_count`
-    * `snv_detection_sensitivity`
-    * `indel_detection_sensitivity`
-    * `snv_detection_specificity`
-    * `indel_detection_specificity`
-    * `sv_sensitivity`
-    * `sv_specificity`
-    * `het_snp_sensitivity`
-    * `het_indel_sensitivity`
-    * `hom_snp_sensitivity`
-    * `hom_indel_sensitivity`
-    * `DEL`
-    * `INS`
-    * `DUP`
-    * `INV`
-    * `TRANS`
-    * `sv_nonrep_count`
-    * `sv_str_count`
-    * `sv_segdup_count`
+    * `ID`: from the input assembly_list
+    * `Name`: from the input assembly_list
+    * `snv_count`: Total SNVs found
+    * `deletions`: Total small (1-50 bp) deletions found
+    * `insertions`: Total small (1-50 bp) insertions found
+    * `sv_count`: Total SVs found
+    * `snv_detection_sensitivity`: SNV sensitivity ignoring genotype errors (TRUTH.TP + FP.gt)/TRUTH.TOTAL in hap.py metrics
+    * `indel_detection_sensitivity`: Indel sensitivity ignoring genotype errors (TRUTH.TP + FP.gt)/TRUTH.TOTAL in hap.py metrics
+    * `snv_detection_specificity`: SNV specificity ignoring genotype errors (QUERY.TP + FP.gt)/QUERY.TOTAL in hap.py metrics
+    * `indel_detection_specificity`: Indel specificity ignoring genotype errors (QUERY.TP + FP.gt)/QUERY.TOTAL in hap.py metrics
+    * `sv_sensitivity`: SV sensitivity using `bedtools pairtopair` with 50 bp slop at each breakpoint
+    * `sv_specificity`: SV specificity using `bedtools pairtopair` with 50 bp slot at each breakpoint
+    * `het_snp_sensitivity`: Sensitivity for heterozygous snps only
+    * `het_indel_sensitivity`: Sensitivity for heterozygous indels only
+    * `hom_snp_sensitivity`: Sensitivity for homozygous snps only
+    * `hom_indel_sensitivity`: Sensitivity for homozygous indels only
+    * `DEL`: Total deletions detected from split-read alignments
+    * `INS`: Total insertions detected from split-read alignments
+    * `DUP`: Total duplications detected from split-read alignments
+    * `INV`: Total inversions detected from split-read alignments
+    * `TRANS`: Total translocations detected from split-read alignments
+    * `sv_nonrep_count`: Total SVs that don't overlap STR or SEGDUP regions
+    * `sv_str_count`: Total SVs that overlap STR regions
+    * `sv_segdup_count`: Total SVs that overlap SEGDUP but not STR regions
