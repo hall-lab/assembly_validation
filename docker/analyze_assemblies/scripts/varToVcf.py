@@ -15,7 +15,7 @@ def parseLine(line, ref, out, out2, minimumSize, id):
         altBase = padding + varList[7]
         start2 = int(varList[9])
         altBase2 = padding
-        refBase2 = padding + varList[6]
+        refBase2 = padding + varList[7]
     elif (varList[7] == "-"): #deletion
         if (len(varList[6]) < minimumSize):
             return
@@ -25,18 +25,18 @@ def parseLine(line, ref, out, out2, minimumSize, id):
         refBase = padding + varList[6]
         start2 = int(varList[9])
         refBase2 = padding
-        altBase2 = padding + varList[7]
+        altBase2 = padding + varList[6]
     else:
         if (minimumSize > 1):
             return
         refBase = varList[6]
         altBase = varList[7]
         start = int(varList[3])
-        start2 = int(varList[9])
+        start2 = int(varList[10])
         refBase2 = varList[7]
         altBase2 = varList[6]
-    out.write("\t".join((varList[1], str(start), id, refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+varList[9]]), "GT", "1|."))+"\n")
-    out2.write("\t".join((varList[8], str(start2), id, refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+varList[2]]), "GT", "1|."))+"\n")
+    out.write("\t".join((varList[1], str(start), id, refBase.upper(), altBase.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[8], "QSTART="+str(start2)]), "GT", "1|."))+"\n")
+    out2.write("\t".join((varList[8], str(start2), id, refBase2.upper(), altBase2.upper(), varList[5], ".", ";".join(["COV="+varList[4], "QNAME="+varList[1], "QSTART="+str(start)]), "GT", "1|."))+"\n")
 
 def processVar(opts):
     ref = pysam.Fastafile(opts.refFile)
@@ -59,10 +59,8 @@ def processVar(opts):
 def main():
 
     usage = """%prog -r <reference> -i <var.txt file>
-
 varToVcf
-
-Author: Allison Regier	
+Author: Allison Regier    
 Description: Converts var format produced by paftools call into VCF
     """
     parser = OptionParser(usage)
