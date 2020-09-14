@@ -13,11 +13,14 @@ workflow PlotAssemblies {
         File truth_list_snp_indel
         File truth_list_confident_region
         File truth_list_sv_vcf
+        File truth_list_sv_confident_region
+        File jupyter_notebook_template
     }
     Array[Array[File]] assemblies = read_tsv(assembly_list)
     Map[String, File] truthsets_snp_indel = read_map(truth_list_snp_indel)
     Map[String, File] truthsets_confident_region = read_map(truth_list_confident_region)
     Map[String, File] truthsets_sv_vcf = read_map(truth_list_sv_vcf)
+    Map[String, File] truthsets_sv_confident_region = read_map(truth_list_sv_confident_region)
 
     scatter (assembly in assemblies) {
 	String truth_name = assembly[3]
@@ -30,6 +33,7 @@ workflow PlotAssemblies {
 		truth_vcf_snp_indel=if truth_name != "NONE" then truthsets_snp_indel[truth_name] else "None",
 		truth_confident_region=if truth_name != "NONE" then truthsets_confident_region[truth_name] else "None",
 		truth_vcf_sv=if truth_name != "NONE" then truthsets_sv_vcf[truth_name] else "None",
+        truth_confident_region_sv=if truth_name != "NONE" then truthsets_sv_confident_region[truth_name] else "None",
 		gap_file=gap_file,
 		str_track=str_track,
 		seg_dup_track=seg_dup_track,
@@ -56,11 +60,14 @@ workflow PlotAssemblies {
             segDup_types=analyze_assembly.segDup_types,
             het_fates=select_all(analyze_assembly.het_fates),
             str_venn=select_all(analyze_assembly.str_venn),
-            segDup_venn=select_all(analyze_assembly.segDup_venn)
+            segDup_venn=select_all(analyze_assembly.segDup_venn),
+            cigar_indel_lengths=analyze_assembly.cigar_indel_lengths,
+            assembly_file=assembly_list, 
+            template=jupyter_notebook_template
     }
 
     output {
-    	File plot_tarball = make_plots.plots_tar
+        File jupyter_notebook = make_plots.jupyter_notebook
     }
 }
 
@@ -80,7 +87,10 @@ task make_plots {
         Array[File] het_fates
         Array[File] str_venn
         Array[File] segDup_venn
+        Array[File] cigar_indel_lengths
         File populations
+        File assembly_file
+        File template
         File small_variants_fof = write_lines(small_variants)
         File indels_fof = write_lines(indels)
         File sv_fof = write_lines(sv)
@@ -95,19 +105,36 @@ task make_plots {
         File het_fates_fof = write_lines(het_fates)
         File str_venn_fof = write_lines(str_venn)
         File segDup_venn_fof = write_lines(segDup_venn)
+        File cigar_indel_lengths_fof = write_lines(cigar_indel_lengths)
     }
     command <<<
         set -exo pipefail
         mkdir -p plots
-        RSCRIPT=/usr/local/bin/Rscript
-        ${RSCRIPT} /opt/hall-lab/make_plots.R ~{populations} ~{small_variants_fof} ~{indels_fof} ~{sv_fof} ~{genome_cov_fof} ~{nonRep_lengths_fof} ~{str_lengths_fof} ~{segDup_lengths_fof} ~{counts_fof} ~{nonRep_types_fof} ~{str_types_fof} ~{segDup_types_fof} ~{het_fates_fof} ~{str_venn_fof} ~{segDup_venn_fof}
-        tar -czf plots.tar.gz plots
+        SCRIPT=/opt/hall-lab/customize_notebook.py
+        echo "pop	~{populations}" > notebook_inputs.tsv
+        echo "assembly_tsv	~{assembly_file}" >> notebook_inputs.tsv
+        echo "counts_horizontal	~{counts_fof}" >> notebook_inputs.tsv
+        echo "str_typeCount	~{str_types_fof}" >> notebook_inputs.tsv
+        echo "nonRep_typeCount	~{nonRep_types_fof}" >> notebook_inputs.tsv
+        echo "nonRep_lengths	~{nonRep_lengths_fof}" >> notebook_inputs.tsv
+        echo "sv_str_VennInput	~{str_venn_fof}" >> notebook_inputs.tsv
+        echo "str_lengths	~{str_lengths_fof}" >> notebook_inputs.tsv
+        echo "happy_extended	~{small_variants_fof}" >> notebook_inputs.tsv
+        echo "genomecov_noGaps	~{genome_cov_fof}" >> notebook_inputs.tsv
+        echo "segDup_typeCount	~{segDup_types_fof}" >> notebook_inputs.tsv
+        echo "indel_lengths_horizontal	~{cigar_indel_lengths_fof}" >> notebook_inputs.tsv
+        echo "happy_het_counts_horizontal	~{het_fates_fof}" >> notebook_inputs.tsv
+        echo "segDup_lengths	~{segDup_lengths_fof}" >> notebook_inputs.tsv
+        echo "sv_segDup_VennInput	~{segDup_venn_fof}" >> notebook_inputs.tsv
+        echo "indel_counts	~{indels_fof}" >> notebook_inputs.tsv
+        echo "sv_counts_horizontal	~{sv_fof}" >> notebook_inputs.tsv
+        $SCRIPT --tsv notebook_inputs.tsv --template ~{template} --output new.ipynb
     >>>
     runtime {
-        docker: "apregier/plot_assemblies@sha256:32e0f400595dc98c05a2fa31023e9558bd51c71e60e2069b48222b561d459668"
+        docker: "apregier/plot_assemblies@sha256:436cb951a37b4fb953d98d9fdf1aad556db538f7df4b17a04ea2354d55ea94e1"
         memory: "4 GB"
     }
     output {
-        File plots_tar="plots.tar.gz"
+        File jupyter_notebook="new.ipynb"
     }
 }

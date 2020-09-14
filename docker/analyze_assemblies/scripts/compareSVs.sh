@@ -2,12 +2,13 @@
 set -exo pipefail
 
 REF_SV_VCF=$1
-BEDPE=$2
-OUTPUT_PREFIX=$3
-SAMPLE=$4
-REFNAME=$5
-SEGDUP_BED=$6
-STR_BED=$7
+REF_SV_BED=$2
+BEDPE=$3
+OUTPUT_PREFIX=$4
+SAMPLE=$5
+REFNAME=$6
+SEGDUP_BED=$7
+STR_BED=$8
 
 SVTOOLS=/opt/hall-lab/python-2.7.15/bin/svtools
 PERL=/usr/bin/perl
@@ -72,7 +73,7 @@ cut -f 1-6 $OUTPUT_PREFIX.compared.$REFNAME.segDup.PASS.bedpe | sort -u | wc -l 
 /bin/bash $BEDPETOBED $OUTPUT_PREFIX.$REFNAME.segDup.bedpe $OUTPUT_PREFIX.$REFNAME.segDup.bed
 /bin/bash $BEDPETOBED $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bedpe $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed
 
-/bin/bash $BEDPETOBED $BEDPE $BEDPE.bed
+/bin/bash $BEDPETOBED $BEDPE $OUTPUT_PREFIX.ours.bed
 echo "total $REFNAME nonRep bed" >> $OUTPUT_PREFIX.counts.txt
 cut -f 1-3 $OUTPUT_PREFIX.$REFNAME.nonRep.bed | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
 echo "total $REFNAME str bed" >> $OUTPUT_PREFIX.counts.txt
@@ -86,19 +87,19 @@ cut -f 1-3 $OUTPUT_PREFIX.$REFNAME.str.PASS.bed | sort -u | wc -l >> $OUTPUT_PRE
 echo "total $REFNAME segDup PASS bed" >> $OUTPUT_PREFIX.counts.txt
 cut -f 1-3 $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
 
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.nonRep.bed
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.str.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.str.bed
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.segDup.bed
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.nonRep.PASS.bed
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.str.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.str.PASS.bed
-$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.segDup.PASS.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.nonRep.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.str.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.str.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.segDup.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.nonRep.PASS.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.str.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.str.PASS.bed
+$BEDTOOLS intersect -wa -u -f .5 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.50.$REFNAME.segDup.PASS.bed
 
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.nonRep.bed
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.str.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.str.bed
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.segDup.bed
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.nonRep.PASS.bed
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.str.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.str.PASS.bed
-$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed -b $BEDPE.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.segDup.PASS.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.nonRep.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.str.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.str.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.segDup.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.nonRep.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.nonRep.PASS.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.str.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.str.PASS.bed
+$BEDTOOLS intersect -wa -u -f .1 -r -a $OUTPUT_PREFIX.$REFNAME.segDup.PASS.bed -b $OUTPUT_PREFIX.ours.bed > $OUTPUT_PREFIX.intersect.10.$REFNAME.segDup.PASS.bed
 
 echo "Reciprocal overlap 50% $REFNAME nonRep" >> $OUTPUT_PREFIX.counts.txt
 cut -f 1-3 $OUTPUT_PREFIX.intersect.50.$REFNAME.nonRep.bed | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
@@ -125,6 +126,13 @@ echo "Reciprocal overlap 10% $REFNAME str PASS" >> $OUTPUT_PREFIX.counts.txt
 cut -f 1-3 $OUTPUT_PREFIX.intersect.10.$REFNAME.str.PASS.bed | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
 echo "Reciprocal overlap 10% $REFNAME segDup PASS" >> $OUTPUT_PREFIX.counts.txt
 cut -f 1-3 $OUTPUT_PREFIX.intersect.10.$REFNAME.segDup.PASS.bed | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
+
+echo "SVs in confident region intersect" >> $OUTPUT_PREFIX.counts.txt
+$BEDTOOLS intersect -wa -u -f 1 -a $OUTPUT_PREFIX.ours.bed -b $REF_SV_BED | cut -f 1-3 | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
+echo "SVs in confident region both ends" >> $OUTPUT_PREFIX.counts.txt
+$BEDTOOLS pairtobed -a $BEDPE -b $REF_SV_BED -type both | cut -f 1-6 | sort -u | wc -l >> $OUTPUT_PREFIX.counts.txt
+echo "SVs in confident region coverage gt .9" >> $OUTPUT_PREFIX.counts.txt
+$BEDTOOLS coverage -a $OUTPUT_PREFIX.ours.bed -b $REF_SV_BED | awk '$7 >= .9' | wc -l >> $OUTPUT_PREFIX.counts.txt
 
 STR_BEDPE=$OUTPUT_PREFIX.ours.str.bedpe
 SEGDUP_BEDPE=$OUTPUT_PREFIX.ours.segDup.bedpe

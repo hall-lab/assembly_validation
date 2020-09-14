@@ -1,0 +1,1 @@
+GiaB_HG002	/storage1/fs1/ccdg/Active/analysis/ref_grant/assembly_analysis_20200220/giab_4.1/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed

@@ -35,9 +35,9 @@ GREP=/bin/grep
 
 CONTIGS=$OUTPUT_PREFIX.combined_contigs.fa
 if [ -s $CONTIG2 ]; then
-    cat <(cat $CONTIG1 | sed 's/\(>.*\)/\1_H1/') <(cat $CONTIG2 | sed 's/\(>.*\)/\1_H2/') > $CONTIGS
+    cat <(zcat $CONTIG1 | sed 's/\(>.*\)/\1_H1/') <(zcat $CONTIG2 | sed 's/\(>.*\)/\1_H2/') > $CONTIGS
 else
-    cp $CONTIG1 $CONTIGS
+    zcat $CONTIG1 > $CONTIGS
 fi
 $MINIMAP2 -x asm5 --cs $REF $CONTIGS > $OUTPUT_PREFIX.paf
 $MINIMAP2 -ax asm5 -L --cs $REF $CONTIGS | $SAMTOOLS sort -T $OUTPUT_PREFIX.tmp -O bam - > $OUTPUT_PREFIX.bam

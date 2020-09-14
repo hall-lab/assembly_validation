@@ -21,6 +21,8 @@ while (my $line = <>) {
     }
     elsif ($line =~ "^#") {
         print "##INFO=<ID=COV,Number=1,Type=Integer,Description=\"Contig coverage at this position\">\n";
+        print "##INFO=<ID=QNAME,Number=1,Type=String,Description=\"Contig coverage at this position\">\n";
+        print "##INFO=<ID=QSTART,Number=1,Type=Integer,Description=\"Contig coverage at this position\">\n";
         print "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n";
         print $line."\n";
     }

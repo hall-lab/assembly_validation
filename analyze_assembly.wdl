@@ -9,6 +9,7 @@ workflow AnalyzeAssembly {
         File? truth_vcf_snp_indel
         File? truth_confident_region
         File? truth_vcf_sv
+        File? truth_confident_region_sv
         File gap_file
         File str_track
         File seg_dup_track
@@ -28,6 +29,11 @@ workflow AnalyzeAssembly {
             str_track=str_track,
             seg_dup_track=seg_dup_track
     }
+    call get_indel_lengths {
+        input:
+            vcf=align_contigs.genotyped_vcf,
+            output_prefix=output_prefix
+    }
     if (truth_name != "NONE") {
         call compare_indels {
             input:
@@ -43,6 +49,7 @@ workflow AnalyzeAssembly {
             input:
                 bedpe=align_contigs.bedpe,
                 truth=truth_vcf_sv,
+                truth_confident_region=truth_confident_region_sv,
                 output_prefix=output_prefix,
                 sample_name=sample_name,
                 truth_name=truth_name,
@@ -78,6 +85,7 @@ workflow AnalyzeAssembly {
             File nonRep_types=align_contigs.nonRep_types
             File str_types=align_contigs.str_types
             File segDup_types=align_contigs.segDup_types
+            File cigar_indel_lengths=get_indel_lengths.cigar_indel_lengths
             File? het_fates=calculate_het_fates.het_counts
             File? str_venn=compare_svs.str_venn
             File? segDup_venn=compare_svs.segDup_venn
@@ -100,7 +108,7 @@ task compare_indels {
     >>>
     runtime {
         memory: "16G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File counts="${output_prefix}.indels.indel.counts.horizontal.txt"
@@ -111,6 +119,7 @@ task compare_svs {
     input {
         File bedpe
         File? truth
+        File? truth_confident_region
         File str_bed
         File seg_dup_bed
         String output_prefix
@@ -119,11 +128,11 @@ task compare_svs {
     }
     command <<<
         set -exo pipefail
-        /bin/bash /opt/hall-lab/scripts/compareSVs.sh ~{truth} ~{bedpe} ~{output_prefix}.sv ~{sample_name} ~{truth_name} ~{seg_dup_bed} ~{str_bed}
+        /bin/bash /opt/hall-lab/scripts/compareSVs.sh ~{truth} ~{truth_confident_region} ~{bedpe} ~{output_prefix}.sv ~{sample_name} ~{truth_name} ~{seg_dup_bed} ~{str_bed}
     >>>
     runtime {
         memory: "8G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File counts="${output_prefix}.sv.counts.horizontal.txt"
@@ -144,6 +153,7 @@ task compare_small {
     }
     command <<<
         HGREF=~{ref} /opt/hap.py/bin/hap.py ~{truth} ~{vcf} -o ~{output_prefix}.happy \
+        -f ~{confident_region} \
         --location chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22 \
         --threads 4 \
         --preprocess-truth
@@ -168,10 +178,29 @@ task calculate_het_fates {
     >>>
     runtime {
         memory: "4G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File het_counts="${output_prefix}.happy.het.counts.horizontal.txt"
+    }
+}
+
+task get_indel_lengths {
+    input {
+        File vcf
+        String output_prefix
+    }
+    command <<<
+        set -exo pipefail
+        touch tmp.2
+        /opt/hall-lab/python-2.7.15/bin/python /opt/hall-lab/scripts/sv_lengths.py -v ~{vcf} -o ~{output_prefix}.indel_lengths.horizontal.txt
+    >>>
+    runtime {
+        memory: "4G"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
+    }
+    output {
+        File cigar_indel_lengths="${output_prefix}.indel_lengths.horizontal.txt"
     }
 }
 
@@ -192,7 +221,7 @@ task align_contigs {
     >>>
     runtime {
         memory: "64G"
-        docker: "apregier/analyze_assemblies@sha256:87192d5e8bf0c6afb114af34adcd822c36e5250d0649829f6ec239ca993e48f5"
+        docker: "apregier/analyze_assemblies@sha256:edf94bd952180acb26423e9b0e583a8b00d658ac533634d59b32523cbd2a602a"
     }
     output {
         File genotyped_vcf="${output_prefix}.loose.genotyped.vcf.gz"
