@@ -161,7 +161,7 @@ def splitterToBreakpoint(contigFile,splitReadSlop,localRange,insertionOutputFast
                 next_insertion_sequence_name = next_insertion_sequence_name + 1
                 printSequenceToFile(insertionOutputFasta, insertion_sequence_name, insertion_sequence)
                 #ins_length = len(insertion_sequence)
-                ins_length = queryStart1 - queryEnd2
+                ins_length = queryStart2 - queryEnd1
                 info = ";".join(["INS="+insertion_sequence_name, "REF_OLAP="+refOlap, "SVLEN="+str(ins_length), "RDIST="+str(rdist), "QDIST="+str(qdist), "ROVERLAP="+str(roverlap), "QOVERLAP="+str(qoverlap)])
         if variant == "GAP":
             #print out gap sequences to fasta

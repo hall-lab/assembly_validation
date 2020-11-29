@@ -1,0 +1,209 @@
+#!/usr/local/bin/python2.6
+# -*- Mode: Python -*-
+
+import sys
+from optparse import OptionParser
+import re
+import os
+import pysam
+
+class refPos (object):
+    """
+    struct to store the end position of reference CIGAR operations
+    """
+    def __init__(self, rPos):
+        self.rPos = int(rPos)
+
+
+class QueryPos (object):
+    """
+    struct to store the start and end positions of query CIGAR operations
+    """
+    def __init__(self, qsPos, qePos, qLen):
+        self.query_start = int(qsPos)
+        self.query_end = int(qePos)
+        self.query_length  = int(qLen)
+
+def processSam(opts):
+    samFile = opts.samFile;
+    if samFile == "stdin":
+        s = pysam.AlignmentFile("-", "r")
+    else:
+        s = pysam.AlignmentFile(samFile, 'r')
+    blockList = []
+    prevRead = pysam.AlignedSegment()
+    inBlock = 0
+    for currRead in s.fetch():
+        if currRead.query_name != prevRead.query_name:
+            makeBedpe(blockList, opts, s)
+            blockList = [currRead]
+            prevRead = currRead
+        else:
+            blockList.append(currRead)
+    # Need to process the last block at end of file.
+    makeBedpe(blockList, opts, s)
+
+def calcOverlap(bed1, bed2):
+    o = 1 + min(bed1[6], bed2[6]) - max(bed1[5], bed2[5])
+    return max(0, o)
+
+totalLines = 0;
+def outputBedpe(bed1, bed2, opts):
+    # set1 = set(range(bed1[5], bed1[6] + 1))
+    # set2 = set(range(bed2[5], bed2[6] + 1))
+    # nonOverlap1 = len(set1) - len(set1 & set2)
+    # nonOverlap2 = len(set2) - len(set1 & set2)
+    overlap = calcOverlap(bed1, bed2)
+    nonOverlap1 = (1 + bed1[6] - bed1[5]) - overlap
+    nonOverlap2 = (1 + bed2[6] - bed2[5]) - overlap
+    minNonOverlap = min(nonOverlap1, nonOverlap2)  
+    if (minNonOverlap >= opts.MNO):
+        global totalLines;
+        totalLines += 1;
+        # sys.stderr.write(bed1[3] + ' ' + str(nonOverlap1) + ' ' + str(nonOverlap2) + ' ' + str(overlap) + ' ' + str(minNonOverlap) + '\n')
+        print str(bed1[0]) + "\t" + str(bed1[1]) + "\t" + str(bed1[2]) + "\t" + str(bed2[0]) + "\t" + \
+              str(bed2[1]) + "\t" + str(bed2[2]) + "\t" + str(bed1[3]) + "\t" + str(bed1[8]+bed2[8]) + "\t" + str(bed1[4]) + \
+              "\t"  + str(bed2[4]) + "\t" + str(bed1[5]) + "\t" + str(bed1[6]) + "\t" + \
+              str(bed2[5]) + "\t" + str(bed2[6])  + "\t" + str(minNonOverlap)  + "\t" + str(bed1[9]) + "\t" + \
+              "MQ1="+str(bed1[7])+":"+"MQ2="+str(bed2[7])+":"+"AS1="+str(bed1[8])+":"+"AS2="+str(bed2[8])
+
+
+def makeBedpe(blockList, opts, samFile):
+    if (len(blockList) < 2):
+        return
+    # First put the "primary" alignments into the pBedBlock.
+    # And any remaining "secondary" alignments into the sBedBlock.
+    pBedBlock=[]
+    sBedBlock=[]
+    for i in xrange(len(blockList)):
+        strand = "+"
+        if blockList[i].is_reverse == True:
+            strand = "-"
+        qual = int(blockList[i].mapping_quality)
+        score = blockList[i].get_tag('AS');
+        queryPos = calcQueryPosFromCigar(blockList[i].cigartuples, blockList[i].is_reverse)
+        #seqname, startRefOff, endRefOff, queryId, strand, startQueryOff, endQueryOff, mapQual, AS, queryLen
+        bed = [samFile.getrname(blockList[i].reference_id), blockList[i].reference_start, blockList[i].reference_end, blockList[i].query_name, strand, queryPos.query_start, queryPos.query_end, qual, score, queryPos.query_length]
+        if (blockList[i].is_secondary):
+            sBedBlock.append(bed)
+        else:
+            pBedBlock.append([bed])
+    # Sort the primaries by starting query offset.
+    pBedBlock.sort(cmp=lambda x,y: cmp(x[0][5],y[0][5]))
+    # Now place secondaries into the corresponding primary list.
+    for i in xrange(len(sBedBlock)):
+        maxOverlap = -1;
+        maxJvalue = -1;
+        for j in xrange(len(pBedBlock)):
+            overlap = calcOverlap(sBedBlock[i], pBedBlock[j][0])
+            if (overlap > maxOverlap):
+                maxOverlap = overlap
+                maxJvalue = j
+        if (maxOverlap > 0):
+            pBedBlock[maxJvalue].append(sBedBlock[i])
+    # Now output all pairs from adjoining similarity sets.
+    for i in xrange(len(pBedBlock)-1):
+        set1 = pBedBlock[i]
+        j = i+1
+        p1 = set1[0]
+        p2 = pBedBlock[j][0]
+        qdist0 = abs(p1[1]-p2[2])
+        rdist0 = max(abs(p1[6]-p2[5]), abs(p1[6]-p2[6]), abs(p1[5]-p2[5]), abs(p1[5]-p2[6]))
+        rdistmax = rdist0
+        qdistmax = qdist0
+        rchr=p1[0]
+        for j in xrange(i+1, len(pBedBlock)):
+            set2 = pBedBlock[j];
+    #        # We need to check for the "span" feature.
+    #        # Let the adjacent ones goes through unmolested.
+            #p1 = set1[0];
+            p2 = set2[0];
+            qdist1 = abs(p1[1]-p2[2])
+            rdist1 = max(abs(p1[6]-p2[5]), abs(p1[6]-p2[6]), abs(p1[5]-p2[5]), abs(p1[5]-p2[6]))
+            rdistmax = rdist1
+            qdistmax = qdist1
+            rchr=p1[0]
+
+    #        # sys.stderr.write(str(p1[6]) + ' ' + str(p2[5]) + '\n');
+#            if ((opts.span == 0 and j > i+1) or (opts.span > 0 and p1[6] + opts.span -1 < p2[5])):
+#            if ((opts.span == 0 and j > i+1) or (opts.span > 0 and (j>i+10 or abs(p1[6]-p2[5])>opts.span))): #p1[6] + opts.span -1 < p2[5])): 
+            if ((opts.span == 0 and j > i+1) or (opts.span > 0 and (j>i+10 or abs(p1[6]-p2[5])>opts.span))):
+                break;
+            
+            #if j<i+10 and abs(p1[6]-p2[5])<opts.span:
+            #   sys.stderr.write(str(i)+' '+str(j)+' '+str(p1)+'\n')
+            #   sys.stderr.write(str(i)+' '+str(j)+' '+str(p2)+'\n')
+               #sys.stderr.write(str(p1[6]) + ' ' + str(p2[5]) + ' ' +  str((p1[6]-p2[5])>20)+ ' ' + str( (p2[5]-p1[6])>opts.span)+ ' ' +str(opts.span) + '\n')
+            for ii in xrange(len(set1)):
+                for jj in xrange(len(set2)):
+                    outputBedpe(set1[ii], set2[jj], opts)
+
+def calcQueryPosFromCigar(cigar, is_reverse):
+    query_start = 0
+    query_end = 0
+    query_length  = 0
+
+    if is_reverse:
+        cigar = cigar[::-1]
+
+    for i in xrange(len(cigar)):
+        k, n = cigar[i]
+        if k in (4,5): # H, S
+            if i == 0:
+                query_start += n
+                query_end += n
+                query_length += n
+            else:
+                query_length += n
+        elif k in (0,1,7,8): #M,I,=,X
+            query_end += n
+            query_length += n
+
+    d = QueryPos(query_start, query_end, query_length);
+    return d
+
+
+def main():
+
+    usage = """%prog -i <samFile or stdin>>
+
+splitReadSamToBedpe
+
+Author: Michael Lindberg, Aaron Quinlan & Ira Hall	
+Description: reports split read mappings in a SAM file to bedpe; 
+IMPORTANT NOTE: this replaces previous versions splitReadSamToBedPe and splitReadSamToBedPe_ih (Ira completed final version)
+OUTPUT: in addition to standard bedpe format, 
+col8=sum of alignment scores; 
+col11=queryStart1; 
+col12=queryEnd1;
+col13=queryStart2; 
+col14=queryEnd2; 
+col15=minNonOverlap between the two alignments; 
+col15=query length;
+col16=mapping qualities and alignment scores
+
+Modified by GGF on Jan 12, 2012 to handle secondary alignments.
+Modified by GGF on Feb 10, 2012 to add minNonOverlap parameter.
+Modified by GGF on March 27, 2012 to add span parameter.
+    """
+
+    parser = OptionParser(usage)
+    parser.add_option("-i", dest="samFile", help="sam filename sorted by read id (not enforced), or standard input (-i stdin)", metavar="FILE")
+    parser.add_option("-m", dest="MNO", help="minimum non-overlap to allow in output (default 25)", metavar="MNO", type="int", default=25);
+    parser.add_option("-s", dest="span", help="maximum span to allow between reported pairs (default 0)", metavar="SPAN", type="int", default=0);
+    (opts, args) = parser.parse_args()
+
+    if opts.samFile is None:
+        parser.print_help()
+        print
+    else:
+        try:
+            processSam(opts);
+        except IOError as err:
+            sys.stderr.write("Output " + str(totalLines) + " total lines.\n");
+            sys.stderr.write("IOError " + str(err) + "\n");
+            return
+            
+if __name__ == "__main__":
+    sys.exit(main())
+    (END)
