@@ -104,17 +104,32 @@ def makeBedpe(blockList, opts, samFile):
     # Now output all pairs from adjoining similarity sets.
     for i in xrange(len(pBedBlock)-1):
         set1 = pBedBlock[i]
+        j = i+1
+        p1 = set1[0]
+        p2 = pBedBlock[j][0]
+        qdist0 = abs(p1[1]-p2[2])
+        rdist0 = max(abs(p1[6]-p2[5]), abs(p1[6]-p2[6]), abs(p1[5]-p2[5]), abs(p1[5]-p2[6]))
+        rdistmax = rdist0
+        qdistmax = qdist0
+        rchr=p1[0]
         for j in xrange(i+1, len(pBedBlock)):
             set2 = pBedBlock[j];
     #        # We need to check for the "span" feature.
     #        # Let the adjacent ones goes through unmolested.
-            p1 = set1[0];
+            #p1 = set1[0];
             p2 = set2[0];
+            qdist1 = abs(p1[1]-p2[2])
+            rdist1 = max(abs(p1[6]-p2[5]), abs(p1[6]-p2[6]), abs(p1[5]-p2[5]), abs(p1[5]-p2[6]))
+            rdistmax = rdist1
+            qdistmax = qdist1
+            rchr=p1[0]
+
     #        # sys.stderr.write(str(p1[6]) + ' ' + str(p2[5]) + '\n');
 #            if ((opts.span == 0 and j > i+1) or (opts.span > 0 and p1[6] + opts.span -1 < p2[5])):
 #            if ((opts.span == 0 and j > i+1) or (opts.span > 0 and (j>i+10 or abs(p1[6]-p2[5])>opts.span))): #p1[6] + opts.span -1 < p2[5])): 
             if ((opts.span == 0 and j > i+1) or (opts.span > 0 and (j>i+10 or abs(p1[6]-p2[5])>opts.span))):
                 break;
+            
             #if j<i+10 and abs(p1[6]-p2[5])<opts.span:
             #   sys.stderr.write(str(i)+' '+str(j)+' '+str(p1)+'\n')
             #   sys.stderr.write(str(i)+' '+str(j)+' '+str(p2)+'\n')
