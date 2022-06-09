@@ -20,9 +20,9 @@ while (my $line = <>) {
         else {
             $query_span = $fields[16]-$fields[14];
         }
-        $fields[6] = $fields[6].":GAP_DIFF=".abs(max(0,$ref_span)-max(0,$query_span));
-        $fields[6] = $fields[6].":R_OLAP=$ref_span";
-        $fields[6] = $fields[6].":QUERY_OLAP=$query_span";
+        $fields[6] = $fields[6].";GAP_DIFF=".abs(max(0,$ref_span)-max(0,$query_span));
+        $fields[6] = $fields[6].";R_OLAP=$ref_span";
+        $fields[6] = $fields[6].";QUERY_OLAP=$query_span";
         print join("\t", @fields)."\n";
     }
 }

@@ -48,7 +48,7 @@ def calcOverlap(bed1, bed2):
     return max(0, o)
 
 totalLines = 0;
-def outputBedpe(bed1, bed2, opts):
+def outputBedpe(bed1, bed2, paired, opts):
     # set1 = set(range(bed1[5], bed1[6] + 1))
     # set2 = set(range(bed2[5], bed2[6] + 1))
     # nonOverlap1 = len(set1) - len(set1 & set2)
@@ -65,7 +65,7 @@ def outputBedpe(bed1, bed2, opts):
               str(bed2[1]) + "\t" + str(bed2[2]) + "\t" + str(bed1[3]) + "\t" + str(bed1[8]+bed2[8]) + "\t" + str(bed1[4]) + \
               "\t"  + str(bed2[4]) + "\t" + str(bed1[5]) + "\t" + str(bed1[6]) + "\t" + \
               str(bed2[5]) + "\t" + str(bed2[6])  + "\t" + str(minNonOverlap)  + "\t" + str(bed1[9]) + "\t" + \
-              "MQ1="+str(bed1[7])+";"+"MQ2="+str(bed2[7])+";"+"AS1="+str(bed1[8])+";"+"AS2="+str(bed2[8])
+              "MQ1="+str(bed1[7])+";MQ2="+str(bed2[7])+";AS1="+str(bed1[8])+";AS2="+str(bed2[8])+";PAIRED="+str(paired)
 
 
 def makeBedpe(blockList, opts, samFile):
@@ -102,14 +102,12 @@ def makeBedpe(blockList, opts, samFile):
         if (maxOverlap > 0):
             pBedBlock[maxJvalue].append(sBedBlock[i])
     # Now output all pairs from adjoining similarity sets.
+    inv_list=[]
     for i in xrange(len(pBedBlock)-1):
         set1 = pBedBlock[i]
         p1 = set1[0]
         rchr0=p1[0]
-        #done1 = False
-        #done2 = False
         mismatch = False
-        #rdistmax = 0
         done = False
         #sys.stderr.write(str(i)+'\t'+str(i)+'\t'+str(p1[0])+'\t'+str(p1[1])+'\t'+str(p1[2])+'\t'+str(rdistmax)+'\n')
         for j in xrange(i+1, len(pBedBlock)):
@@ -131,7 +129,61 @@ def makeBedpe(blockList, opts, samFile):
               mismatch = True
             for ii in xrange(len(set1)):
                 for jj in xrange(len(set2)):
-                    outputBedpe(set1[ii], set2[jj], opts)
+                    if (set1[ii][0]==set2[jj][0] and set1[ii][4]!=set2[jj][4]):
+                      inv_list.append([set1[ii], set2[jj]])
+                    else:
+                      outputBedpe(set1[ii], set2[jj], 1, opts)
+    pairInv(inv_list, opts)
+
+
+def pairInv(inv_list, opts):
+    forward=[]
+    reverse=[]
+    for pair in inv_list:
+        if pair[0][4]=='+':
+            forward.append(pair)
+        else:
+            reverse.append(pair)
+    used_list=[]
+    for pair1 in forward:
+        max_ov=-1
+        if pair1[1][1]>pair1[0][1]:
+            for pair2 in reverse:
+                if pair1[0][0]==pair2[0][0]:   #check same chr
+                    ov=calcOverlap(pair1[1], pair2[0])
+                    if (ov>0.9*(pair1[1][2]-pair1[1][1])) or (ov>0.9*(pair2[0][2]-pair2[0][1])):
+                        if ov>max_ov:
+                            max_ov=ov
+                            mate=pair2
+            if max_ov>0:
+                outputBedpe(pair1[0], pair1[1], 2, opts)
+                outputBedpe(mate[0], mate[1], 2, opts)
+                used_list.append(pair1)
+                used_list.append(mate)
+        else:
+            for pair2 in reverse:
+                if pair1[0][0]==pair2[0][0]:
+                    ov=calcOverlap(pair2[1], pair1[0])
+                    if (ov>0.9*(pair2[1][2]-pair2[1][1])) or (ov>0.9*(pair1[0][2]-pair1[0][1])):
+                        if ov>max_ov:
+                            max_ov=ov
+                            mate=pair2
+            if max_ov>0:
+                outputBedpe(mate[0], mate[1], 2, opts)
+                outputBedpe(pair1[0], pair1[1], 2, opts)
+                used_list.append(pair1)
+                used_list.append(mate)
+    
+    for pair1 in forward:
+        #print(str(pair1))
+        if not pair1 in used_list:
+            outputBedpe(pair1[0], pair1[1], 1, opts)
+    for pair1 in reverse:
+        #print(str(pair1))
+        if not pair1 in used_list:
+            outputBedpe(pair1[0], pair1[1], 1, opts)
+                  
+
 
 def calcQueryPosFromCigar(cigar, is_reverse):
     query_start = 0

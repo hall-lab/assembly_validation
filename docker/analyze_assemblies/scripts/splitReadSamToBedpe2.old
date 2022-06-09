@@ -65,7 +65,7 @@ def outputBedpe(bed1, bed2, opts):
               str(bed2[1]) + "\t" + str(bed2[2]) + "\t" + str(bed1[3]) + "\t" + str(bed1[8]+bed2[8]) + "\t" + str(bed1[4]) + \
               "\t"  + str(bed2[4]) + "\t" + str(bed1[5]) + "\t" + str(bed1[6]) + "\t" + \
               str(bed2[5]) + "\t" + str(bed2[6])  + "\t" + str(minNonOverlap)  + "\t" + str(bed1[9]) + "\t" + \
-              "MQ1="+str(bed1[7])+";"+"MQ2="+str(bed2[7])+";"+"AS1="+str(bed1[8])+";"+"AS2="+str(bed2[8])
+              "MQ1="+str(bed1[7])+":"+"MQ2="+str(bed2[7])+":"+"AS1="+str(bed1[8])+":"+"AS2="+str(bed2[8])
 
 
 def makeBedpe(blockList, opts, samFile):
@@ -106,29 +106,41 @@ def makeBedpe(blockList, opts, samFile):
         set1 = pBedBlock[i]
         p1 = set1[0]
         rchr0=p1[0]
-        #done1 = False
-        #done2 = False
+        done1 = False
+        done2 = False
         mismatch = False
-        #rdistmax = 0
-        done = False
+        rdistmax = 0
         #sys.stderr.write(str(i)+'\t'+str(i)+'\t'+str(p1[0])+'\t'+str(p1[1])+'\t'+str(p1[2])+'\t'+str(rdistmax)+'\n')
         for j in xrange(i+1, len(pBedBlock)):
             set2 = pBedBlock[j];
             p2 = set2[0]
-            #rdist1 = max(abs(p1[2]-p2[1]), abs(p1[2]-p2[2]), abs(p1[1]-p2[1]), abs(p1[1]-p2[2]))
+            rdist1 = max(abs(p1[2]-p2[1]), abs(p1[2]-p2[2]), abs(p1[1]-p2[1]), abs(p1[1]-p2[2]))
             #sys.stderr.write(str(i)+'\t'+str(j)+'\t'+str(p2[0])+'\t'+str(p2[1])+'\t'+str(p2[2])+'\t'+str(rdist1)+'\t'+str(done1)+'\t'+str(done2)+'\n')
-            if done:
+            if done2:
                 break
             if ((opts.span == 0 and j > i+1) or (opts.span > 0 and (j>i+20 or abs(p1[6]-p2[5])>opts.span))):
                 #sys.stderr.write('span break\n')
                 break
             rchr=p2[0]
             if rchr == rchr0:
-              done = True
+              rdist1 = max(abs(p1[2]-p2[1]), abs(p1[2]-p2[2]), abs(p1[1]-p2[1]), abs(p1[1]-p2[2]))
+              if done1:
+                  done2 = True
+                  break
+                #sys.stderr.write(str(rdist1)+'\t'+str(rdistmax)+'\n')
+                #if rdist1>rdistmax:
+                #  rdistmax=rdist1
+                #  done2=True
+                #  sys.stderr.write('done2 true\n')
+                #  break
+             # if rdist1>rdistmax:
+             #   rdistmax=rdist1
+              done1=True
             else:
               if mismatch:
                 continue
               mismatch = True
+            #sys.stderr.write(str(i)+'\t'+str(j)+'\t'+str(p2[0])+'\t'+str(p2[1])+'\t'+str(p2[2])+'\t'+str(rdist1)+'\t'+str(done1)+'\t'+str(done2)+'***\n')
             for ii in xrange(len(set1)):
                 for jj in xrange(len(set2)):
                     outputBedpe(set1[ii], set2[jj], opts)
